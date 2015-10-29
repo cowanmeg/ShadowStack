@@ -30,3 +30,7 @@
 
 # Build folder
 build/
+
+#other
+.DS_Store
+*.h.gch
