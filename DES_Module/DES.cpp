@@ -1,58 +1,23 @@
-//Code from www.programmersheaven.com
+# include <iostream>
 # include <stdio.h>
 # include <fstream>
 # include <string.h>
-# include <iostream>
 # include <stdlib.h>
-using namespace std;
- 
-int key[64]=
-{
-    0,0,0,1,0,0,1,1,
-    0,0,1,1,0,1,0,0,
-    0,1,0,1,0,1,1,1,
-    0,1,1,1,1,0,0,1,
-    1,0,0,1,1,0,1,1,
-    1,0,1,1,1,1,0,0,
-    1,1,0,1,1,1,1,1,
-    1,1,1,1,0,0,0,1
-};
 
-class Des
+# include "DES.h"
+
+using namespace std;
+
+Des::Des()
 {
-public:
-    int keyi[16][48],
-        total[64],
-        left[32],
-        right[32],
-        ck[28],
-        dk[28],
-        expansion[48],
-        z[48],
-        xor1[48],
-        sub[32],
-        p[32],
-        xor2[32],
-        temp[64],
-        pc1[56],
-        ip[64],
-        inv[8][8];
- 
-    char final[1000];
-    void IP();
-    void PermChoice1();
-    void PermChoice2();
-    void Expansion();
-    void inverse();
-    void xor_two();
-    void xor_oneE(int);
-    void xor_oneD(int);
-    void substitution();
-    void permutation();
-    void keygen();
-    char * Encrypt(char *);
-    char * Decrypt(char *);
-};
+    key = rkeygen();
+}
+
+Des::~Des()
+{
+
+}
+
 void Des::IP() //Initial Permutation
 {
     int k=58,i;
@@ -126,6 +91,7 @@ void Des::Expansion() //Expansion Function applied on `right' half
         for(j=0; j<6; j++)
             expansion[k++]=exp[i][j];
 }
+
 void Des::PermChoice2()
 {
     int per[56],i,k;
@@ -181,12 +147,14 @@ void Des::PermChoice2()
     z[46]=per[28];
     z[47]=per[31];
 }
+
 void Des::xor_oneE(int round) //for Encrypt
 {
     int i;
     for(i=0; i<48; i++)
         xor1[i]=expansion[i]^keyi[round-1][i];
 }
+
 void Des::xor_oneD(int round) //for Decrypt
 {
     int i;
@@ -459,6 +427,7 @@ char * Des::Encrypt(char *Text1)
     final[mc]='\0';
     return(final);
 }
+
 char * Des::Decrypt(char *Text1)
 {
     int i,a1,j,nB,m,iB,k,K,B[8],n,t,d,round;
@@ -524,21 +493,7 @@ char * Des::Decrypt(char *Text1)
     final1[i]='\0';
     return(final);
 }
-int main()
-{
-    Des d1,d2;
-    char *str=new char[1000];
-    char *str1=new char[1000];
-    //strcpy(str,"PHOENIX it & ece solutions.");
-    cout<<"Enter a string : ";
-    cin >> str;
-    str1=d1.Encrypt(str);
-    cout<<"\ni/p Text: "<<str<<endl;
-    cout<<"\nCypher  : "<<str1<<endl;
-    //  ofstream fout("out2_fil.txt"); fout<<str1; fout.close();
-    cout<<"\no/p Text: "<<d2.Decrypt(str1)<<endl;
-}
- 
+
 void Des::keygen()
 {
     PermChoice1();
@@ -578,3 +533,33 @@ void Des::keygen()
             keyi[round-1][i]=z[i];
     }
 }
+
+int * Des::rkeygen(){
+    int size = 64;
+    int tkey[size];
+
+    for(int i = 0; i < size; i++){
+        int v = rand() % RAND_MAX + 1;
+        if( (v % 2) == 0 ){
+            tkey[i] = 1;
+        }else{
+            tkey[i] = 0;
+        }
+    }
+    return tkey;
+}
+
+// int main()
+// {
+//     Des d1,d2;
+//     char *str  = new char[1000];
+//     char *str1 = new char[1000];
+//     //strcpy(str,"PHOENIX it & ece solutions.");
+//     cout<<"Enter a string : ";
+//     cin >> str;
+//     str1=d1.Encrypt(str);
+//     cout<<"\ni/p Text: "<<str<<endl;
+//     cout<<"\nCypher  : "<<str1<<endl;
+//     //  ofstream fout("out2_fil.txt"); fout<<str1; fout.close();
+//     cout<<"\no/p Text: "<<d2.Decrypt(str1)<<endl;
+// }

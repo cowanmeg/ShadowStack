@@ -21,7 +21,7 @@ private:
         pc1[56],
         ip[64],
         inv[8][8],
-        key[64];
+        *key;
  	char final[1000];
 	
 public:
