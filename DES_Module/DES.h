@@ -21,7 +21,7 @@ private:
         pc1[56],
         ip[64],
         inv[8][8],
-        *key;
+        key[64];
  	char final[1000];
 	
 public:
@@ -38,7 +38,7 @@ public:
     void substitution();
     void permutation();
     void keygen();
-    int* rkeygen();
+    void rkeygen();
     char * Encrypt(char *);
     char * Decrypt(char *);
 };

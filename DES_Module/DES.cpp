@@ -10,7 +10,7 @@ using namespace std;
 
 Des::Des()
 {
-    key = rkeygen();
+    rkeygen();
 }
 
 Des::~Des()
@@ -534,19 +534,16 @@ void Des::keygen()
     }
 }
 
-int * Des::rkeygen(){
+void Des::rkeygen(){
     int size = 64;
-    int tkey[size];
-
-    for(int i = 0; i < size; i++){
+    for(int i = 0; i<size; i++){
         int v = rand() % RAND_MAX + 1;
         if( (v % 2) == 0 ){
-            tkey[i] = 1;
+            key[i] = 1;
         }else{
-            tkey[i] = 0;
+            key[i] = 0;
         }
     }
-    return tkey;
 }
 
 // int main()
