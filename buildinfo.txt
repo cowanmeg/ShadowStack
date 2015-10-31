@@ -1,0 +1,7 @@
+Gem5
+
+Running a binary
+./build/X86/gem5.opt --debug-flags=Branch configs/example/se.py -c tests/test-progs/hello/src/loop --cpu-type=detailed --caches
+
+Compiling a binary statically - no optimizations no stack smashing protection
+gcc loop.c -std=c99 -fno-stack-protector -static -o0 -o loop
