@@ -5,6 +5,10 @@
 *.obj
 *.pyc 
 
+# Temp files
+*~
+.*.swp
+
 # Precompiled Headers
 *.gch
 *.pch
@@ -30,6 +34,7 @@
 
 # Build folder
 build/
+m5out/
 
 #other
 .DS_Store

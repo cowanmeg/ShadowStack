@@ -36,7 +36,7 @@
 #include "arch/types.hh"
 #include "base/types.hh"
 #include "config/the_isa.hh"
-#include "../../../../DES_Module/DES.h"
+
 /** Return address stack class, implements a simple RAS. */
 class ReturnAddrStack
 {
@@ -44,9 +44,7 @@ class ReturnAddrStack
     /** Creates a return address stack, but init() must be called prior to
      *  use.
      */
-    ReturnAddrStack() {
-	des = new Des();
-    }
+    ReturnAddrStack() {}
 
     /** Initializes RAS with a specified number of entries.
      *  @param numEntries Number of entries in the RAS.
@@ -99,7 +97,6 @@ class ReturnAddrStack
 
     /** The top of stack index. */
     unsigned tos;
-    Des* des;
 };
 
 #endif // __CPU_PRED_RAS_HH__
