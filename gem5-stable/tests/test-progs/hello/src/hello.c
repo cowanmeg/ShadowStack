@@ -30,8 +30,17 @@
 
 #include <stdio.h>
 
+void goodbye() {
+  printf("Goodbye\n");
+}
+
+void hello() {
+  printf("Hello\n");
+  goodbye();
+} 
+
 int main()
 {
-    printf("Hello world!\n");
+  hello();
 }
 

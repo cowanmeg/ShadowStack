@@ -76,15 +76,28 @@ class ReturnAddrStack
 
      bool empty() { return usedEntries == 0; }
 
-     bool full() { return usedEntries == numEntries; }
+     bool full() { //return usedEntries == numEntries; 
+                   return tos == numEntries;
+		 } // usedEntries doesn't seem to be updated correctly
+
+    void print();
   private:
     /** Increments the top of stack index. */
     inline void incrTos()
-    { if (++tos == numEntries) tos = 0; }
+    { //if (++tos == numEntries) tos = 0; 
+        if (full())
+          std::cout << "RAS overflow\n";
+        tos++;
+    }
 
     /** Decrements the top of stack index. */
     inline void decrTos()
-    { tos = (tos == 0 ? numEntries - 1 : tos - 1); }
+    { //tos = (tos == 0 ? numEntries - 1 : tos - 1); 
+       if (tos > 0)
+         tos--;
+       else
+         std::cout << "RAS underflow\n";
+    }
 
     /** The RAS itself. */
     std::vector<TheISA::PCState> addrStack;

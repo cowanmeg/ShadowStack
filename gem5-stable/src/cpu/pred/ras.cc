@@ -29,10 +29,12 @@
  */
 
 #include "cpu/pred/ras.hh"
+#include "debug/Ras.hh"
 
 void
 ReturnAddrStack::init(unsigned _numEntries)
 {
+     DPRINTF(Ras, "Initializing RAS or size %d\n", _numEntries);
      numEntries  = _numEntries;
      addrStack.resize(numEntries);
      reset();
@@ -50,6 +52,10 @@ ReturnAddrStack::reset()
 void
 ReturnAddrStack::push(const TheISA::PCState &return_addr)
 {
+    if (full()) {
+      DPRINTF(Ras, "\t RAS is full\n");
+    }
+
     incrTos();
 
     addrStack[tos] = return_addr;
@@ -57,16 +63,21 @@ ReturnAddrStack::push(const TheISA::PCState &return_addr)
     if (usedEntries != numEntries) {
         ++usedEntries;
     }
+    DPRINTF(Ras, "RAS pushed %s tos=%d, usedEntries=%d\n", return_addr, tos, usedEntries);
 }
 
 void
 ReturnAddrStack::pop()
 {
+    TheISA::PCState popped_addr = addrStack[tos];
+
     if (usedEntries > 0) {
         --usedEntries;
     }
-
+    
     decrTos();
+    
+    DPRINTF(Ras, "RAS popped %s, tos=%d\n", popped_addr, tos);
 }
 
 void
@@ -76,4 +87,12 @@ ReturnAddrStack::restore(unsigned top_entry_idx,
     tos = top_entry_idx;
 
     addrStack[tos] = restored;
+    
+    DPRINTF(Ras, "RAS restored %s tos=%d, usedEntries=%d\n", restored, tos, usedEntries);
+}
+
+void
+ReturnAddrStack::print() {
+    for (int i = tos; i>=0; i--)
+        DPRINTF(Ras, "\ttos=%d, %s\n", i, addrStack[i]);
 }
