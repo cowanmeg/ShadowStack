@@ -181,6 +181,26 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
 
     // Now lookup in the BTB or RAS.
     if (pred_taken) {
+        // if predicting a call save the caller address in the RAS
+        if (inst->isCall()) {
+                RAS[tid].push(pc);
+                predict_record.pushedRAS = true;
+
+                // Record that it was a call so that the top RAS entry can
+                // be popped off if the speculation is incorrect.
+                predict_record.wasCall = true;
+
+                DPRINTF(Ras, "[tid:%i]: Instruction %s was a "
+                        "call, adding %s to the RAS index: %i.\n",
+                        tid, pc, pc, RAS[tid].topIdx());
+
+                /*if (inst->isIndirectCtrl())
+                  std::cout << "Indirect call\n";
+                if (!inst->isDirectCtrl())
+                  std::cout << "Not direct call\n";*/
+        }
+
+        // Predicting branch targets
         if (inst->isReturn()) {
             ++usedRAS;
             predict_record.wasReturn = true;
@@ -199,26 +219,17 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
             DPRINTF(Ras, "[tid:%i]: Instruction %s is a return, "
                     "RAS predicted target: %s, RAS index: %i.\n",
                     tid, pc, target, predict_record.RASIndex);
-        } else {
-            ++BTBLookups;
+        } else if (inst->isDirectCtrl()) {
+           target = inst->branchTarget(pc);
+           DPRINTF(Branch, "[tid:%i]: Instruction %s is a direct jump/call"
+                        " target is %s.\n", tid, pc, target);
+        } else { // Indirect control and not a return- use the BTB to guess
+           ++BTBLookups;
 
-            if (inst->isCall()) {
-                RAS[tid].push(pc);
-                predict_record.pushedRAS = true;
-
-                // Record that it was a call so that the top RAS entry can
-                // be popped off if the speculation is incorrect.
-                predict_record.wasCall = true;
-
-                DPRINTF(Ras, "[tid:%i]: Instruction %s was a "
-                        "call, adding %s to the RAS index: %i.\n",
-                        tid, pc, pc, RAS[tid].topIdx());
-            }
-
-            if (BTB.valid(pc.instAddr(), tid)) {
+           if (BTB.valid(pc.instAddr(), tid)) {
                 ++BTBHits;
 
-                // If it's not a return, use the BTB to get the target addr.
+                // Use the BTB to get the target addr.
                 target = BTB.lookup(pc.instAddr(), tid);
 
                 DPRINTF(Branch, "[tid:%i]: Instruction %s predicted"
@@ -227,31 +238,24 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
             } else {
                 DPRINTF(Branch, "[tid:%i]: BTB doesn't have a "
                         "valid entry.\n",tid);
-                pred_taken = false;
+                
                 // The Direction of the branch predictor is altered because the
                 // BTB did not have an entry
                 // The predictor needs to be updated accordingly
-                if (!inst->isCall() && !inst->isReturn()) {
+                if (!inst->isCall()) {
                       btbUpdate(pc.instAddr(), bp_history);
                       DPRINTF(Branch, "[tid:%i]:[sn:%i] btbUpdate"
                               " called for %s\n", tid, seqNum, pc);
-                      // meghan
+                      pred_taken = false;
                       TheISA::advancePC(target, inst);
                 } else if (inst->isCall() && !inst->isUncondCtrl()) {
                       //RAS[tid].pop();
                       //predict_record.pushedRAS = false;
-                      pred_taken = true;
-                      DPRINTF(Ras, "RAS popped because no entry in BTB\n");
+                      DPRINTF(Ras, "Don't know the target of the call\n");
                 }
-                TheISA::advancePC(target, inst);
-            }
+                //TheISA::advancePC(target, inst);
+           }
         }
-    } else {
-        if (inst->isReturn()) {
-           predict_record.wasReturn = true;
-           std::cout << "Didn't use RAS\n";
-        }
-        TheISA::advancePC(target, inst);
     }
 
     pc = target;
@@ -494,7 +498,8 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
             // meghan: Incorrect RAS address Security attack?
             DPRINTF(Ras, "RAS Incorrect! RAS Index %d caller %s\n", (*hist_it).RASIndex, (*hist_it).RASTarget);
             RAS[tid].print();
-            std::cout << "RAS incorrect" << std::endl;
+            std::cout << "RAS incorrect - Return Addr modified" << std::endl;
+            exit(1);
         }
 
         update((*hist_it).pc, actually_taken,
