@@ -160,6 +160,7 @@ class BaseCPU(MemObject):
         interrupts = Param.AlphaInterrupts(
                 NULL, "Interrupt Controller")
         isa = VectorParam.AlphaISA([ isa_class() ], "ISA instance")
+
     elif buildEnv['TARGET_ISA'] == 'x86':
         dtb = Param.X86TLB(X86TLB(), "Data TLB")
         itb = Param.X86TLB(X86TLB(), "Instruction TLB")
@@ -222,10 +223,6 @@ class BaseCPU(MemObject):
     if buildEnv['TARGET_ISA'] == 'x86':
         _uncached_slave_ports += ["interrupts.pio", "interrupts.int_slave"]
         _uncached_master_ports += ["interrupts.int_master"]
-    # Meghan - Add an entry for the module's master port
-    elif buildEnv['TARGET_ISA'] == 'alpha':
-        TestMemDevice = TestMemDevice()
-        _uncached_master_ports += ["TestMemDevice.port"]
 
     def createInterruptController(self):
         if buildEnv['TARGET_ISA'] == 'sparc':
@@ -251,7 +248,6 @@ class BaseCPU(MemObject):
             sys.exit(1)
 
     def connectCachedPorts(self, bus):
-        print self._cached_ports
         for p in self._cached_ports:
             exec('self.%s = bus.slave' % p)
 
@@ -266,6 +262,12 @@ class BaseCPU(MemObject):
         if not uncached_bus:
             uncached_bus = cached_bus
         self.connectUncachedPorts(uncached_bus)
+
+    # Meghan
+    def addTestMemDevice(self, dev):
+        self.testmemdevice = dev
+        self._uncached_master_ports += ['testmemdevice.port']
+        print "Here\n"
 
     def addPrivateSplitL1Caches(self, ic, dc, iwc = None, dwc = None):
         self.icache = ic

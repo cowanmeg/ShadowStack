@@ -11,20 +11,25 @@ protected:
       public:
 
 		ShadowStackPort(const std::string &_name, TestMemDevice *_owner)
-		: MasterPort(_name, _owner)
+		: MasterPort(_name, _owner), owner(_owner)
 		{ }
 
       protected:
 
-		virtual bool recvTimingResp(PacketPtr pkt) {return false;}
+		virtual bool recvTimingResp(PacketPtr pkt) {
+			return owner->recvTimingResp(pkt);
+		}
 		virtual void recvTimingSnoopReq(PacketPtr pkt) { }
 
 		virtual void recvReqRetry() { }
+
+		TestMemDevice *owner;
     };
 
     /** Instance of master port, facing the memory side */
     ShadowStackPort *port; 
 
+    bool recvTimingResp(PacketPtr pkt);
 
 public:
 	// Convenience typedef.
@@ -32,6 +37,10 @@ public:
 
 	TestMemDevice(const Params *p);
 	~TestMemDevice();
+	void connected() {
+		std::cout << "Connected? " << port->isConnected() << std::endl;
+	}
+	
 
 	virtual BaseMasterPort& getMasterPort(const std::string &if_name, 
 		PortID idx = InvalidPortID);

@@ -115,6 +115,9 @@ def config_cache(options, system):
             else:
                 system.cpu[i].addPrivateSplitL1Caches(icache, dcache)
 
+            testmemdevice = TestMemDevice()
+            system.cpu[i].addTestMemDevice(testmemdevice)
+
             if options.memchecker:
                 # The mem_side ports of the caches haven't been connected yet.
                 # Make sure connectAllPorts connects the right objects.
