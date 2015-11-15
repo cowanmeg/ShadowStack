@@ -60,6 +60,8 @@ if buildEnv['TARGET_ISA'] == 'alpha':
     from AlphaInterrupts import AlphaInterrupts
     from AlphaISA import AlphaISA
     isa_class = AlphaISA
+    # Meghan - import the module
+    from TestMemDevice import TestMemDevice
 elif buildEnv['TARGET_ISA'] == 'sparc':
     from SparcTLB import SparcTLB
     from SparcInterrupts import SparcInterrupts
@@ -220,6 +222,10 @@ class BaseCPU(MemObject):
     if buildEnv['TARGET_ISA'] == 'x86':
         _uncached_slave_ports += ["interrupts.pio", "interrupts.int_slave"]
         _uncached_master_ports += ["interrupts.int_master"]
+    # Meghan - Add an entry for the module's master port
+    elif buildEnv['TARGET_ISA'] == 'alpha':
+        TestMemDevice = TestMemDevice()
+        _uncached_master_ports += ["TestMemDevice.port"]
 
     def createInterruptController(self):
         if buildEnv['TARGET_ISA'] == 'sparc':
@@ -245,6 +251,7 @@ class BaseCPU(MemObject):
             sys.exit(1)
 
     def connectCachedPorts(self, bus):
+        print self._cached_ports
         for p in self._cached_ports:
             exec('self.%s = bus.slave' % p)
 
