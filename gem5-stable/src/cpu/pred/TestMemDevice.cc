@@ -4,7 +4,6 @@ TestMemDevice::TestMemDevice(const Params *p)
 	: MemObject(p) {
 	port = new ShadowStackPort(name() + "-port", this);
 	std::cout << name() << std::endl;
-    connected();
 }
 
 TestMemDevice::~TestMemDevice() {

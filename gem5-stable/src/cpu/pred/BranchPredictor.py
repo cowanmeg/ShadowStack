@@ -29,6 +29,7 @@
 
 from m5.SimObject import SimObject
 from m5.params import *
+from TestMemDevice import *
 
 class BranchPredictor(SimObject):
     type = 'BranchPredictor'
@@ -41,6 +42,7 @@ class BranchPredictor(SimObject):
     BTBTagSize = Param.Unsigned(16, "Size of the BTB tags, in bits")
     RASSize = Param.Unsigned(128, "RAS size")
     instShiftAmt = Param.Unsigned(2, "Number of bits to shift instructions by")
+    #testmemdevice = Param.TestMemDevice(TestMemDevice(), "Custom module for RAS")
 
 
 class LocalBP(BranchPredictor):

@@ -36,6 +36,7 @@
 #include "arch/types.hh"
 #include "base/types.hh"
 #include "config/the_isa.hh"
+#include "cpu/pred/TestMemDevice.hh"
 
 /** Return address stack class, implements a simple RAS. */
 class ReturnAddrStack
@@ -110,6 +111,7 @@ class ReturnAddrStack
 
     /** The top of stack index. */
     unsigned tos;
+
 };
 
 #endif // __CPU_PRED_RAS_HH__

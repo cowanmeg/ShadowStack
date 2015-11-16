@@ -60,8 +60,6 @@ if buildEnv['TARGET_ISA'] == 'alpha':
     from AlphaInterrupts import AlphaInterrupts
     from AlphaISA import AlphaISA
     isa_class = AlphaISA
-    # Meghan - import the module
-    from TestMemDevice import TestMemDevice
 elif buildEnv['TARGET_ISA'] == 'sparc':
     from SparcTLB import SparcTLB
     from SparcInterrupts import SparcInterrupts
@@ -262,12 +260,6 @@ class BaseCPU(MemObject):
         if not uncached_bus:
             uncached_bus = cached_bus
         self.connectUncachedPorts(uncached_bus)
-
-    # Meghan
-    def addTestMemDevice(self, dev):
-        self.testmemdevice = dev
-        self._uncached_master_ports += ['testmemdevice.port']
-        print "Here\n"
 
     def addPrivateSplitL1Caches(self, ic, dc, iwc = None, dwc = None):
         self.icache = ic

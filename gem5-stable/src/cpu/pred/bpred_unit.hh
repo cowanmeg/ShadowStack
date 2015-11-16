@@ -71,6 +71,8 @@ class BPredUnit : public SimObject
      * @param params The params object, that has the size of the BP and BTB.
      */
     BPredUnit(const Params *p);
+    void assignPort(TestMemDevice *_dev) { dev = _dev; dev->connected();}
+    TestMemDevice *dev;
 
     /**
      * Registers statistics.
