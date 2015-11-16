@@ -139,8 +139,10 @@ class DerivO3CPU(BaseCPU):
     smtROBThreshold = Param.Int(100, "SMT ROB Threshold Sharing Parameter")
     smtCommitPolicy = Param.String('RoundRobin', "SMT Commit Policy")
 
-    testmemdevice = Param.TestMemDevice(TestMemDevice(), "Ras Overflow")
-    exec('testmemdevice.port = Parent.system.membus.slave')
+    #testmemdevice = Param.TestMemDevice(TestMemDevice(), "Ras Overflow")
+    #exec('testmemdevice.port = Parent.system.membus.slave')
+    #testmemdevice.port = Parent.system.membus.slave
+
     branchPred = Param.BranchPredictor(TournamentBP(numThreads=Parent.numThreads),
         "Branch Predictor")
     needsTSO = Param.Bool(buildEnv['TARGET_ISA'] == 'x86',
@@ -161,3 +163,7 @@ class DerivO3CPU(BaseCPU):
         else:
             print "ERROR: Checker only supported under ARM ISA!"
             exit(1)
+
+    # def addTestMemDevice(self):
+    #     self.testmemdevice = Param.TestMemDevice(TestMemDevice(), "Ras Overflow")
+    #     self.testmemdevice.port = Parent.system.membus.slave

@@ -52,6 +52,7 @@ from InstTracer import InstTracer
 from CPUTracers import ExeTracer
 from MemObject import MemObject
 from ClockDomain import *
+from TestMemDevice import TestMemDevice
 
 default_tracer = ExeTracer()
 
@@ -146,6 +147,8 @@ class BaseCPU(MemObject):
 
     workload = VectorParam.Process([], "processes to run")
 
+    testmemdevice = Param.TestMemDevice(TestMemDevice(), "Ras Overflow")
+
     if buildEnv['TARGET_ISA'] == 'sparc':
         dtb = Param.SparcTLB(SparcTLB(), "Data TLB")
         itb = Param.SparcTLB(SparcTLB(), "Instruction TLB")
@@ -217,7 +220,7 @@ class BaseCPU(MemObject):
         _cached_ports += ["itb.walker.port", "dtb.walker.port"]
 
     _uncached_slave_ports = []
-    _uncached_master_ports = []
+    _uncached_master_ports = ['testmemdevice.port']
     if buildEnv['TARGET_ISA'] == 'x86':
         _uncached_slave_ports += ["interrupts.pio", "interrupts.int_slave"]
         _uncached_master_ports += ["interrupts.int_master"]
@@ -260,6 +263,11 @@ class BaseCPU(MemObject):
         if not uncached_bus:
             uncached_bus = cached_bus
         self.connectUncachedPorts(uncached_bus)
+
+    #def addTestMemDevice(self):
+     #   self.testmemdevice = Param.TestMemDevice(TestMemDevice(), "Ras Overflow")
+      #  _uncached_master_ports += ['testmemdevice.port']
+
 
     def addPrivateSplitL1Caches(self, ic, dc, iwc = None, dwc = None):
         self.icache = ic

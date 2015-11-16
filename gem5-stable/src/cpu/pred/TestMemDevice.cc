@@ -2,7 +2,7 @@
 
 TestMemDevice::TestMemDevice(const Params *p) 
 	: MemObject(p) {
-	port = new ShadowStackPort(name() + "-port", this);
+	port = new ShadowStackPort(name() + ".port", this);
 	std::cout << name() << std::endl;
 }
 
@@ -23,8 +23,13 @@ TestMemDevice::recvTimingResp(PacketPtr pkt) {
 	return false;
 }
 
+bool 
+TestMemDevice::isConnected() {
+	return port->isConnected();
+}
 
 TestMemDevice*
  TestMemDeviceParams::create() {
     return new TestMemDevice(this);
 }
+

@@ -238,6 +238,7 @@ for i in xrange(np):
     if options.checker:
         system.cpu[i].addCheckerCpu()
 
+    #system.cpu[i].createTestMemDevice()
     system.cpu[i].createThreads()
 
 if options.ruby:

@@ -37,9 +37,7 @@ public:
 
 	TestMemDevice(const Params *p);
 	~TestMemDevice();
-	void connected() {
-		std::cout << "Connected? " << port->isConnected() << std::endl;
-	}
+	bool isConnected();
 	
 
 	virtual BaseMasterPort& getMasterPort(const std::string &if_name, 
