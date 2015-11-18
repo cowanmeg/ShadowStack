@@ -71,8 +71,8 @@ BPredUnit::BPredUnit(const Params *params)
 void
 BPredUnit::assignPort(TestMemDevice *_dev) {
     dev = _dev; 
-    if (!dev->isConnected())
-        std::cout << "TestMemDevice is not connected\n";
+    for (auto& r : RAS)
+        r.assignPort(dev);
 }
 
 void

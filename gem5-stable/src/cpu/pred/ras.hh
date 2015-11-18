@@ -51,6 +51,7 @@ class ReturnAddrStack
      *  @param numEntries Number of entries in the RAS.
      */
     void init(unsigned numEntries);
+    void assignPort(TestMemDevice *dev);
 
     void reset();
 
@@ -80,6 +81,11 @@ class ReturnAddrStack
      bool full() { //return usedEntries == numEntries; 
                    return tos == numEntries;
 		 } // usedEntries doesn't seem to be updated correctly
+
+    bool triggerOverflow();
+    bool triggerUnderflow();
+    void writeToShadowStack();
+    void restoreFromShadowStack();
 
     void print();
   private:
@@ -111,6 +117,8 @@ class ReturnAddrStack
 
     /** The top of stack index. */
     unsigned tos;
+
+    TestMemDevice *dev;
 
 };
 

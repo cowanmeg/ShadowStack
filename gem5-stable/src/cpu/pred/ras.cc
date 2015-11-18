@@ -41,6 +41,13 @@ ReturnAddrStack::init(unsigned _numEntries)
 }
 
 void
+ReturnAddrStack::assignPort(TestMemDevice *_dev)
+{
+     DPRINTF(Ras, "Adding test Memdevice\n");
+     dev = _dev;
+}
+
+void
 ReturnAddrStack::reset()
 {
     usedEntries = 0;
@@ -52,10 +59,6 @@ ReturnAddrStack::reset()
 void
 ReturnAddrStack::push(const TheISA::PCState &return_addr)
 {
-    if (full()) {
-      DPRINTF(Ras, "\t RAS is full\n");
-    }
-
     incrTos();
 
     addrStack[tos] = return_addr;
@@ -64,6 +67,12 @@ ReturnAddrStack::push(const TheISA::PCState &return_addr)
         ++usedEntries;
     }
     DPRINTF(Ras, "RAS pushed %s tos=%d, usedEntries=%d\n", return_addr, tos, usedEntries);
+    
+    if (triggerOverflow()) {
+      DPRINTF(Ras, "Triggered overflow tos=%d\n", tos)
+      writeToShadowStack();      
+    }
+
 }
 
 void
@@ -78,6 +87,11 @@ ReturnAddrStack::pop()
     decrTos();
     
     DPRINTF(Ras, "RAS popped %s, tos=%d\n", popped_addr, tos);
+
+    if (triggerUnderflow()) {
+      DPRINTF(Ras, "Triggered underflow tos=%d\n", tos)
+      restoreFromShadowStack();
+    }
 }
 
 void
@@ -95,4 +109,24 @@ void
 ReturnAddrStack::print() {
     for (int i = tos; i>=0; i--)
         DPRINTF(Ras, "\ttos=%d, %s\n", i, addrStack[i]);
+}
+
+bool 
+ReturnAddrStack::triggerOverflow() {
+    return tos > (numEntries * 3 / 4)
+}
+
+bool 
+ReturnAddrStack::triggerUnderflow() {
+    return tos < (numEntries * 1 / 4)
+}
+
+void
+ReturnAddrStack::writeToShadowStack() {
+
+}
+
+void
+ReturnAddrStack::restoreFromShadowStack() {
+
 }
