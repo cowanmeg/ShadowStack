@@ -220,6 +220,7 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
             predict_record.usedRAS = true;
             predict_record.RASIndex = RAS[tid].topIdx();
             predict_record.RASTarget = rasTop;
+            predict_record.RASBos = RAS[tid].bottomIdx();
 
             RAS[tid].pop();
             
@@ -335,6 +336,7 @@ BPredUnit::predictInOrder(const StaticInstPtr &inst, const InstSeqNum &seqNum,
             predict_record.usedRAS = true;
             predict_record.RASIndex = RAS[tid].topIdx();
             predict_record.RASTarget = rasTop;
+            predict_record.RASBos = RAS[tid].bottomIdx();
 
             assert(predict_record.RASIndex < 16);
 
@@ -431,7 +433,7 @@ BPredUnit::squash(const InstSeqNum &squashed_sn, ThreadID tid)
                     " target: %s.\n", tid,
                     pred_hist.front().RASIndex, pred_hist.front().RASTarget);
 
-            RAS[tid].restore(pred_hist.front().RASIndex,
+            RAS[tid].restore(pred_hist.front().RASIndex, pred_hist.front().RASBos,
                              pred_hist.front().RASTarget);
         } else if(pred_hist.front().wasCall && pred_hist.front().pushedRAS) {
              // Was a call but predicated false. Pop RAS here
@@ -536,7 +538,7 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
                 DPRINTF(Ras, "[tid:%i]: Restoring top of RAS"
                         " to: %i, target: %s.\n", tid,
                         hist_it->RASIndex, hist_it->RASTarget);
-                RAS[tid].restore(hist_it->RASIndex, hist_it->RASTarget);
+                RAS[tid].restore(hist_it->RASIndex, hist_it->RASBos, hist_it->RASTarget);
                 hist_it->usedRAS = false;
            } else if (hist_it->wasCall && hist_it->pushedRAS) {
                  //Was a Call but predicated false. Pop RAS here

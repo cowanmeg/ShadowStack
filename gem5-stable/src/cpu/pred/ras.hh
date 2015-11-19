@@ -63,6 +63,9 @@ class ReturnAddrStack
     unsigned topIdx()
     { return tos; }
 
+    unsigned bottomIdx()
+    { return bos; }
+
     /** Pushes an address onto the RAS. */
     void push(const TheISA::PCState &return_addr);
 
@@ -74,7 +77,7 @@ class ReturnAddrStack
      *  @param top_entry_idx The index of the RAS that will now be the top.
      *  @param restored The new target address of the new top of the RAS.
      */
-    void restore(unsigned top_entry_idx, const TheISA::PCState &restored);
+    void restore(unsigned top_entry_idx, unsigned bottom_entry_idx, const TheISA::PCState &restored);
 
      bool empty() { return usedEntries == 0; }
 
@@ -94,16 +97,13 @@ class ReturnAddrStack
     { //if (++tos == numEntries) tos = 0; 
         if (full())
           std::cout << "RAS overflow\n";
-        tos++;
+        if (++tos == numEntries) tos = 0;
     }
 
     /** Decrements the top of stack index. */
     inline void decrTos()
-    { //tos = (tos == 0 ? numEntries - 1 : tos - 1); 
-       if (tos > 0)
-         tos--;
-       else
-         std::cout << "RAS underflow\n";
+    { tos = (tos == 0 ? numEntries - 1 : tos - 1); 
+      // TODO CHECK FOR UNDERFLOW!!!
     }
 
     /** The RAS itself. */
@@ -114,9 +114,10 @@ class ReturnAddrStack
 
     /** The number of used entries in the RAS. */
     unsigned usedEntries;
-
+ 
     /** The top of stack index. */
     unsigned tos;
+    unsigned bos;
 
     TestMemDevice *dev;
 
