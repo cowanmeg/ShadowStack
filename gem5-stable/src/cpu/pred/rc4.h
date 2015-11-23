@@ -2,7 +2,7 @@
 #define RC4_H_
 
 #include <stdint.h>
-
+using namespace std;
 class RC4
 {
     public :

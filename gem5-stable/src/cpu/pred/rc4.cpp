@@ -3,8 +3,9 @@
 #include <stdint.h>
 #include <string>
 #include <iostream>
+#include <algorithm>
+using namespace std; 
 
- 
 RC4::RC4():
 s(),
 i(0),
@@ -20,7 +21,7 @@ uint8_t RC4::encryptByte(uint8_t in)
         s[k] = k;
     }
        
-    uint8_t l = 0;
+uint8_t l = 0;
     for(int k = 0; k <= 255; ++k)
     {
         l = (l + s[k] + key[k % keyLength]) % 256;
@@ -51,8 +52,7 @@ void RC4::genKey(uint8_t tkeyLength){
     
     uint8_t tkey[tkeyLength];
     for(int i =0; i<tkeyLength ; i++){
-
-        tkey[i] = arc4random_uniform(0x30) + 1;
+        tkey[i] = rand()%256;
     }
     this->keyLength = tkeyLength;
     this->key = tkey;
