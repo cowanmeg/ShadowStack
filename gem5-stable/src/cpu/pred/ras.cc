@@ -30,7 +30,7 @@
 
 #include "cpu/pred/ras.hh"
 #include "debug/Ras.hh"
-#include "rc4.hh"
+
 void
 ReturnAddrStack::init(unsigned _numEntries)
 {
