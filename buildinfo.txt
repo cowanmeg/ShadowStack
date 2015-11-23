@@ -1,4 +1,5 @@
-Gem5
+Building Gem5
+scons build/ALPHA/gem5.opt
 
 Running a binary
 ./build/ALPHA/gem5.opt --debug-flags=Branch configs/example/se.py -c tests/test-progs/hello/bin/alpha/linux/hello --cpu-type=detailed --caches
