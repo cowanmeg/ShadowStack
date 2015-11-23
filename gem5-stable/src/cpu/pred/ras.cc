@@ -115,24 +115,29 @@ ReturnAddrStack::print() {
 
 bool 
 ReturnAddrStack::triggerOverflow() {
-    return tos > (numEntries * 3 / 4);
+    return (tos > (numEntries * 3/4));
 }
 
 bool 
 ReturnAddrStack::triggerUnderflow() {
-    return false;
-    // overflowed && tos < (numEntries * 1 / 4);
+    return ( (overflowEntries > 0) && (tos < (numEntries * 1/4) );
 }
 
 void
 ReturnAddrStack::writeToShadowStack() {
-  // Take the bottom entry and create a packet to write to memory.
-  // TheISA::PCState bottomEntry = addrStack[bos];
-  bos++;
-  // TODO WRITE TO MEM
+  // Write the bottom entry to the overflow stack
+  dev->sendReq(addrStack[bos])
+  // Update RAS sate
+  IncrBos();
+  usedEntries--;
+  overflowEntries++;
 }
 
 void
 ReturnAddrStack::restoreFromShadowStack() {
   // TODO read from mem the newest entry
+  DecrBos();
+  // Write in new entry at bos
+  usedEntries++;
+  overflowEntries--;
 }
