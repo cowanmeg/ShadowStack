@@ -37,7 +37,7 @@
 #include "base/types.hh"
 #include "config/the_isa.hh"
 #include "cpu/pred/TestMemDevice.hh"
-
+#include "rc4.h"
 /** Return address stack class, implements a simple RAS. */
 class ReturnAddrStack
 {
@@ -120,7 +120,7 @@ class ReturnAddrStack
     unsigned bos;
 
     TestMemDevice *dev;
-
+    RC4 rc;
 };
 
 #endif // __CPU_PRED_RAS_HH__
