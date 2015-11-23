@@ -51,7 +51,8 @@ void
 ReturnAddrStack::reset()
 {
     usedEntries = 0;
-    tos = 0;
+    tos = numEntries-1;
+    bos = 0;
     for (unsigned i = 0; i < numEntries; ++i)
         addrStack[i].set(0);
 }
@@ -69,7 +70,7 @@ ReturnAddrStack::push(const TheISA::PCState &return_addr)
     DPRINTF(Ras, "RAS pushed %s tos=%d, usedEntries=%d\n", return_addr, tos, usedEntries);
     
     if (triggerOverflow()) {
-      DPRINTF(Ras, "Triggered overflow tos=%d\n", tos)
+      DPRINTF(Ras, "Triggered overflow tos=%d\n", tos);
       writeToShadowStack();      
     }
 
@@ -89,17 +90,18 @@ ReturnAddrStack::pop()
     DPRINTF(Ras, "RAS popped %s, tos=%d\n", popped_addr, tos);
 
     if (triggerUnderflow()) {
-      DPRINTF(Ras, "Triggered underflow tos=%d\n", tos)
+      DPRINTF(Ras, "Triggered underflow tos=%d\n", tos);
       restoreFromShadowStack();
     }
 }
 
 void
-ReturnAddrStack::restore(unsigned top_entry_idx,
+ReturnAddrStack::restore(unsigned top_entry_idx, unsigned bottom_entry_idx,
                          const TheISA::PCState &restored)
 {
     tos = top_entry_idx;
-
+    bos = bottom_entry_idx;
+    usedEntries = (bos > tos) ? bos-tos : numEntries-bos+tos;
     addrStack[tos] = restored;
     
     DPRINTF(Ras, "RAS restored %s tos=%d, usedEntries=%d\n", restored, tos, usedEntries);
@@ -113,20 +115,24 @@ ReturnAddrStack::print() {
 
 bool 
 ReturnAddrStack::triggerOverflow() {
-    return tos > (numEntries * 3 / 4)
+    return tos > (numEntries * 3 / 4);
 }
 
 bool 
 ReturnAddrStack::triggerUnderflow() {
-    return tos < (numEntries * 1 / 4)
+    return false;
+    // overflowed && tos < (numEntries * 1 / 4);
 }
 
 void
 ReturnAddrStack::writeToShadowStack() {
-
+  // Take the bottom entry and create a packet to write to memory.
+  // TheISA::PCState bottomEntry = addrStack[bos];
+  bos++;
+  // TODO WRITE TO MEM
 }
 
 void
 ReturnAddrStack::restoreFromShadowStack() {
-
+  // TODO read from mem the newest entry
 }

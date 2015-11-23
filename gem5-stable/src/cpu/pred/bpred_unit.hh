@@ -211,7 +211,7 @@ class BPredUnit : public SimObject
                          bool pred_taken, void *bp_history,
                          ThreadID _tid)
             : seqNum(seq_num), pc(instPC), bpHistory(bp_history), RASTarget(0),
-              RASIndex(0), tid(_tid), predTaken(pred_taken), usedRAS(0), pushedRAS(0),
+              RASIndex(0), RASBos(0), tid(_tid), predTaken(pred_taken), usedRAS(0), pushedRAS(0),
               wasCall(0), wasReturn(0), wasSquashed(0)
         {}
 
@@ -235,7 +235,8 @@ class BPredUnit : public SimObject
         TheISA::PCState RASTarget;
 
         /** The RAS index of the instruction (only valid if a call). */
-        unsigned RASIndex;
+        unsigned RASIndex; // tos
+        unsigned RASBos;  //bos
 
         /** The thread id. */
         ThreadID tid;
