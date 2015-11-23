@@ -38,10 +38,14 @@ public:
 	TestMemDevice(const Params *p);
 	~TestMemDevice();
 	bool isConnected();
-	
+ 	void sendReq();
+	void readReq();	
 
 	virtual BaseMasterPort& getMasterPort(const std::string &if_name, 
 		PortID idx = InvalidPortID);
+
+private:
+	Addr overflowPaddr;
 
 };
 

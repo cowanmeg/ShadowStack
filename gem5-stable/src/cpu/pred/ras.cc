@@ -45,6 +45,8 @@ ReturnAddrStack::assignPort(TestMemDevice *_dev)
 {
      DPRINTF(Ras, "Adding test Memdevice\n");
      dev = _dev;
+     dev->sendReq();
+     dev->readReq();
 }
 
 void
@@ -120,15 +122,15 @@ ReturnAddrStack::triggerOverflow() {
 
 bool 
 ReturnAddrStack::triggerUnderflow() {
-    return ( (overflowEntries > 0) && (tos < (numEntries * 1/4) );
+    return ( (overflowEntries > 0) && (tos < (numEntries * 1/4)) );
 }
 
 void
 ReturnAddrStack::writeToShadowStack() {
   // Write the bottom entry to the overflow stack
-  dev->sendReq(addrStack[bos])
+  // dev->sendReq(addrStack[bos])
   // Update RAS sate
-  IncrBos();
+  incrBos();
   usedEntries--;
   overflowEntries++;
 }
@@ -136,7 +138,7 @@ ReturnAddrStack::writeToShadowStack() {
 void
 ReturnAddrStack::restoreFromShadowStack() {
   // TODO read from mem the newest entry
-  DecrBos();
+  decrBos();
   // Write in new entry at bos
   usedEntries++;
   overflowEntries--;
