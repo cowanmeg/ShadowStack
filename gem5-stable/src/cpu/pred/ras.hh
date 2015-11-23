@@ -37,6 +37,7 @@
 #include "base/types.hh"
 #include "config/the_isa.hh"
 #include "cpu/pred/TestMemDevice.hh"
+#include "base/types.hh"
 
 /** Return address stack class, implements a simple RAS. */
 class ReturnAddrStack
@@ -51,6 +52,7 @@ class ReturnAddrStack
      *  @param numEntries Number of entries in the RAS.
      */
     void init(unsigned numEntries);
+    /* Initializes RAS with TestMemDevice to use for overflow */
     void assignPort(TestMemDevice *dev);
 
     void reset();
@@ -81,9 +83,8 @@ class ReturnAddrStack
 
      bool empty() { return usedEntries == 0; }
 
-     bool full() { //return usedEntries == numEntries; 
-                   return tos == numEntries;
-		 } // usedEntries doesn't seem to be updated correctly
+     bool full() { return usedEntries == numEntries; 
+		 }
 
     bool triggerOverflow();
     bool triggerUnderflow();
@@ -94,16 +95,24 @@ class ReturnAddrStack
   private:
     /** Increments the top of stack index. */
     inline void incrTos()
-    { //if (++tos == numEntries) tos = 0; 
-        if (full())
-          std::cout << "RAS overflow\n";
+    { 
         if (++tos == numEntries) tos = 0;
     }
 
     /** Decrements the top of stack index. */
     inline void decrTos()
-    { tos = (tos == 0 ? numEntries - 1 : tos - 1); 
-      // TODO CHECK FOR UNDERFLOW!!!
+    { 
+      tos = (tos == 0 ? numEntries - 1 : tos - 1); 
+    }
+    /** Increments the bottom of stack index. */
+    inline void incrBos()
+    { 
+        if (++bos == numEntries) bos = 0;
+    }
+
+    /** Decrements the bottom of stack index. */
+    inline void decrBos()
+    { bos = (bos == 0 ? numEntries - 1 : bos - 1); 
     }
 
     /** The RAS itself. */
@@ -114,9 +123,13 @@ class ReturnAddrStack
 
     /** The number of used entries in the RAS. */
     unsigned usedEntries;
+
+    /** The number of used entries in the overflow. */
+    unsigned overflowEntries;
  
     /** The top of stack index. */
     unsigned tos;
+    /** The bottom of stack index. */
     unsigned bos;
 
     TestMemDevice *dev;
