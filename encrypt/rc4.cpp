@@ -6,13 +6,13 @@
 
 using namespace std;
  
-RC4::RC4(uint8_t *key, uint8_t keyLength):
+RC4::RC4():
 s(),
 i(0),
 j(0)
 {   
-    this->key = key;
-    this->keyLength = keyLength;
+    uint8_t l =7;
+    genKey(l);
 }
  
 uint8_t RC4::encryptByte(uint8_t in)
@@ -48,4 +48,14 @@ uint8_t RC4::encryptByte(uint8_t in)
 uint8_t RC4::decryptByte(uint8_t in)
 {
     return encryptByte(in);
+}
+void RC4::genKey(uint8_t tkeyLength){
+    
+    uint8_t tkey[tkeyLength];
+    for(int i =0; i<tkeyLength ; i++){
+
+        tkey[i] = arc4random_uniform(0x30) + 1;
+    }
+    this->keyLength = tkeyLength;
+    this->key = tkey;
 }
