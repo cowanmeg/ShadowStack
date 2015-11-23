@@ -14,7 +14,6 @@ j(0)
     uint8_t l =7;
     genKey(l);
 }
- 
 uint8_t RC4::encryptByte(uint8_t in)
 {   
     // initialize
