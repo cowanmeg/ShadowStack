@@ -6,6 +6,7 @@ TestMemDevice::TestMemDevice(const Params *p)
 	: MemObject(p) {
 	port = new ShadowStackPort(name() + ".port", this);
 	overflowPaddr = 512000000; // End of DRAM addr range
+	busy = false;
 }
 
 TestMemDevice::~TestMemDevice() {
@@ -21,14 +22,19 @@ TestMemDevice::getMasterPort(const std::string &if_name, PortID idx) {
 
 bool
 TestMemDevice::recvTimingResp(PacketPtr pkt) {
-	// TODO: handlei
-	// temp
-	uint8_t data;
-	pkt->writeData(&data);
-	std::cout << "Packet data " << data << std::endl;
-	
+	// TODO: FIX temp
+	if (pkt->hasData()) {
+		uint8_t data;
+		data = 0;
+		pkt->writeData(&data);
+		std::cout << "Packet data " << data << std::endl;
+	} else {
+		std::cout << "Packet has no data\n";
+	}
+
 	delete pkt;
-	return false;
+	busy = false;
+	return true;
 }
 
 bool 
@@ -37,34 +43,45 @@ TestMemDevice::isConnected() {
 }
 
 void
-TestMemDevice::sendReq() { 
+TestMemDevice::writeReq() { 
 //TestMemDevice::sendReq(TheISA::PCState data) {
 	//create a request packet
 	// TODO incrememnt overflowPaddr
-  	Request *req = new Request();
-  	req->setPaddr(overflowPaddr);
+	if (busy)
+		return;
+	Request::Flags flags;
+	flags.set(Request::UNCACHEABLE);
+  	Request *req = new Request(overflowPaddr, 1, flags, 0);
 
   	Packet *pkt = new Packet(req, MemCmd::WriteReq);
 	// TEMP
-	uint8_t *data = static_cast<uint8_t *>(malloc(sizeof(uint8_t)));
-	*data = 27;
-	pkt->dataStatic<uint8_t>(data);
-	std::cout << "Sending write packet!\n";
+	uint8_t *data = new uint8_t[1];
+	data[0] = 27;
+	pkt->dataStatic(data);
+	std::cout << "Writing packet with data 27\n";
 	port->sendTimingReq(pkt);
+	std::cout << "Sent write packet\n";
+	busy = true;
 } 
 
 void
 TestMemDevice::readReq() {
-	Request *req = new Request();
-	req->setPaddr(overflowPaddr);
+	if (busy)
+		return;
+	Request::Flags flags;
+	flags.set(Request::UNCACHEABLE);
+  	Request *req = new Request(overflowPaddr, 1, flags, 0);
 
 	Packet *pkt = new Packet(req, MemCmd::ReadReq);
+	uint8_t *newData = new uint8_t[1];
+	pkt->dataDynamic(newData);
 	std::cout << "Sendng read packet!\n";
 	port->sendTimingReq(pkt);
+	busy = true;
 }
 
 TestMemDevice*
- TestMemDeviceParams::create() {
+TestMemDeviceParams::create() {
     return new TestMemDevice(this);
 }
 

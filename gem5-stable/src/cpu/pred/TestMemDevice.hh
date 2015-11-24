@@ -38,7 +38,7 @@ public:
 	TestMemDevice(const Params *p);
 	~TestMemDevice();
 	bool isConnected();
- 	void sendReq();
+ 	void writeReq();
 	void readReq();	
 
 	virtual BaseMasterPort& getMasterPort(const std::string &if_name, 
@@ -46,6 +46,7 @@ public:
 
 private:
 	Addr overflowPaddr;
+	bool busy;
 
 };
 

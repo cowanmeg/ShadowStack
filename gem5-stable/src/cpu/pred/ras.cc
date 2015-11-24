@@ -45,8 +45,7 @@ ReturnAddrStack::assignPort(TestMemDevice *_dev)
 {
      DPRINTF(Ras, "Adding test Memdevice\n");
      dev = _dev;
-     dev->sendReq();
-     dev->readReq();
+
 }
 
 void
@@ -62,6 +61,13 @@ ReturnAddrStack::reset()
 void
 ReturnAddrStack::push(const TheISA::PCState &return_addr)
 {
+    /*if (dev->isConnected()) {
+      if (tos%2 == 0)
+        dev->writeReq();
+      else
+        dev->readReq();
+     } */
+
     incrTos();
 
     addrStack[tos] = return_addr;
