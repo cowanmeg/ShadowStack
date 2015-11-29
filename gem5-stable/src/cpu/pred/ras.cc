@@ -52,7 +52,7 @@ void
 ReturnAddrStack::reset()
 {
     usedEntries = 0;
-    tos = numEntries-1;
+    tos = 0;
     bos = 0;
     for (unsigned i = 0; i < numEntries; ++i)
         addrStack[i].set(0);
@@ -68,24 +68,35 @@ ReturnAddrStack::push(const TheISA::PCState &return_addr)
     if (usedEntries != numEntries) {
         ++usedEntries;
     }
-    DPRINTF(Ras, "RAS pushed %s tos=%d, usedEntries=%d\n", return_addr, tos, usedEntries);
+    DPRINTF(Ras, "RAS pushed %s bos=%d, tos=%d, usedEntries=%d\n", return_addr, bos, tos, usedEntries);
     
     checkOverflow();
 
 }
 
 void
-ReturnAddrStack::pop()
+ReturnAddrStack::pop(bool ignoreValue)
 {
     TheISA::PCState popped_addr = addrStack[tos];
 
     if (usedEntries > 0) {
         --usedEntries;
+        decrTos();
+    } else if (ignoreValue && overflowEntries > 0) { // Cheating - when popping off from 
+      // a bad prediction if it goes into the overflow just get rid of it.
+      overflowEntries--;
+      bos--;
+      DPRINTF(Ras, "Trying to pop but RAS empty - pop overflow bos=%d tos=%d entries=%d overflow=%d\n",
+                bos, tos, usedEntries, overflowEntries);
+    } else {
+      DPRINTF(Ras, "Trying to pop but RAS empty bos=%d tos=%d entries=%d overflow=%d\n",
+                bos, tos, usedEntries, overflowEntries);
+      print();
     }
     
-    decrTos();
     
-    DPRINTF(Ras, "RAS popped %s, tos=%d\n", popped_addr, tos);
+    
+    DPRINTF(Ras, "RAS popped %s, bos=%d, tos=%d, usedEntries=%d\n", popped_addr, bos, tos, usedEntries);
 
     checkUnderflow();
 }
@@ -96,10 +107,10 @@ ReturnAddrStack::restore(unsigned top_entry_idx, unsigned bottom_entry_idx,
 {
     tos = top_entry_idx;
     bos = bottom_entry_idx;
-    usedEntries = (bos > tos) ? bos-tos : numEntries-bos+tos;
+    usedEntries = (tos > bos) ? tos-bos-1 : numEntries-bos+tos;
     addrStack[tos] = restored;
     
-    DPRINTF(Ras, "RAS restored %s tos=%d, usedEntries=%d\n", restored, tos, usedEntries);
+    DPRINTF(Ras, "RAS restored %s bos=%d, tos=%d, usedEntries=%d\n", restored, bos, tos, usedEntries);
 }
 
 void
@@ -112,7 +123,7 @@ void
 ReturnAddrStack::checkOverflow() {
     if (tos > (numEntries * 3/4)) {
       // Write the bottom entry to the overflow stack
-      TheISA::PCState data = addrStack[bos];
+      TheISA::PCState data = addrStack[bos+1];
       if (dev->writeReq(data)) {
         // Update RAS sate
         incrBos();
@@ -136,13 +147,13 @@ ReturnAddrStack::checkUnderflow() {
 
 void
 ReturnAddrStack::restoreAddr(const TheISA::PCState &return_addr) {
-  decrBos();
   addrStack[bos] = return_addr;
+  decrBos();
 
   usedEntries++;
   overflowEntries--;
 
-  DPRINTF(Ras, "Ras returned %s to index=%d usedEntries=%d overflowEntries=%d\n", return_addr, 
+  DPRINTF(Ras, "Ras returned %s to bos=%d usedEntries=%d overflowEntries=%d\n", return_addr, 
       bos, usedEntries, overflowEntries);
 
 }

@@ -39,6 +39,8 @@
 #include "cpu/pred/TestMemDevice.hh"
 #include "rc4.h"
 #include "base/types.hh"
+#include "debug/Ras.hh"
+
 
 /** Return address stack class, implements a simple RAS. */
 class ReturnAddrStack
@@ -75,7 +77,7 @@ class ReturnAddrStack
     void push(const TheISA::PCState &return_addr);
 
     /** Pops the top address from the RAS. */
-    void pop();
+    void pop(bool ignoreValue=false);
 
     /** Changes index to the top of the RAS, and replaces the top address with
      *  a new target.
@@ -106,15 +108,14 @@ class ReturnAddrStack
     /** Increments the top of stack index. */
     inline void incrTos()
     { 
-        if (tos + 1 == numEntries)
-          std::cout << "Overflow not handled yet\n";
         if (++tos == numEntries) tos = 0;
     }
 
     /** Decrements the top of stack index. */
     inline void decrTos()
     { 
-      tos = (tos == 0 ? numEntries - 1 : tos - 1); 
+      tos = (usedEntries == numEntries ? numEntries - 1 : tos - 1); 
+
     }
     /** Increments the bottom of stack index. */
     inline void incrBos()

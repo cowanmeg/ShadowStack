@@ -440,7 +440,7 @@ BPredUnit::squash(const InstSeqNum &squashed_sn, ThreadID tid)
              DPRINTF(Ras, "[tid: %i] Squashing"
                      "  Call [sn:%i] PC: %s Popping RAS\n", tid,
                      pred_hist.front().seqNum, pred_hist.front().pc);
-             RAS[tid].pop();
+             RAS[tid].pop(true);
         }
 
         // This call should delete the bpHistory.
@@ -545,7 +545,7 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
                  DPRINTF(Ras, "[tid: %i] Incorrectly predicted"
                          "  Call [sn:%i] PC: %s Popping RAS\n", tid,
                          hist_it->seqNum, hist_it->pc);
-                 RAS[tid].pop();
+                 RAS[tid].pop(true);
                  hist_it->pushedRAS = false;
            }
         }
