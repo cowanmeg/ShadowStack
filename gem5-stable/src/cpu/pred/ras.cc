@@ -45,7 +45,7 @@ ReturnAddrStack::assignPort(TestMemDevice *_dev)
 {
      DPRINTF(Ras, "Adding test Memdevice\n");
      dev = _dev;
-
+     dev->assignRas(this);
 }
 
 void
@@ -61,14 +61,6 @@ ReturnAddrStack::reset()
 void
 ReturnAddrStack::push(const TheISA::PCState &return_addr)
 {
-    // Test REMOVE 
-    if (dev->isConnected()) {
-      if (tos%2 == 0)
-        dev->writeReq();
-      else
-        dev->readReq();
-     }
-
     incrTos();
 
     addrStack[tos] = return_addr;
@@ -78,10 +70,7 @@ ReturnAddrStack::push(const TheISA::PCState &return_addr)
     }
     DPRINTF(Ras, "RAS pushed %s tos=%d, usedEntries=%d\n", return_addr, tos, usedEntries);
     
-    if (triggerOverflow()) {
-      DPRINTF(Ras, "Triggered overflow tos=%d\n", tos);
-      writeToShadowStack();      
-    }
+    checkOverflow();
 
 }
 
@@ -98,10 +87,7 @@ ReturnAddrStack::pop()
     
     DPRINTF(Ras, "RAS popped %s, tos=%d\n", popped_addr, tos);
 
-    if (triggerUnderflow()) {
-      DPRINTF(Ras, "Triggered underflow tos=%d\n", tos);
-      restoreFromShadowStack();
-    }
+    checkUnderflow();
 }
 
 void
@@ -122,31 +108,41 @@ ReturnAddrStack::print() {
         DPRINTF(Ras, "\ttos=%d, %s\n", i, addrStack[i]);
 }
 
-bool 
-ReturnAddrStack::triggerOverflow() {
-    return (tos > (numEntries * 3/4));
+void 
+ReturnAddrStack::checkOverflow() {
+    if (tos > (numEntries * 3/4)) {
+      // Write the bottom entry to the overflow stack
+      TheISA::PCState data = addrStack[bos];
+      if (dev->writeReq(data)) {
+        // Update RAS sate
+        incrBos();
+        usedEntries--;
+        overflowEntries++;
+
+        DPRINTF(Ras, "RAS wrote %s bos=%d, usedEntries=%d overflowEntries=%d\n", data, 
+            bos, usedEntries, overflowEntries);
+      } 
+    }
 }
 
-bool 
-ReturnAddrStack::triggerUnderflow() {
-    return ( (overflowEntries > 0) && (tos < (numEntries * 1/4)) );
+void 
+ReturnAddrStack::checkUnderflow() {
+    if ( (overflowEntries > 0) && (tos < (numEntries * 1/4)) ) {
+      DPRINTF(Ras, "RAS triggered underflow - restore entries\n");
+      dev->readReq();
+    }
+
 }
 
 void
-ReturnAddrStack::writeToShadowStack() {
-  // Write the bottom entry to the overflow stack
-  // dev->sendReq(addrStack[bos])
-  // Update RAS sate
-  incrBos();
-  usedEntries--;
-  overflowEntries++;
-}
-
-void
-ReturnAddrStack::restoreFromShadowStack() {
-  // TODO read from mem the newest entry
+ReturnAddrStack::restoreAddr(const TheISA::PCState &return_addr) {
   decrBos();
-  // Write in new entry at bos
+  addrStack[bos] = return_addr;
+
   usedEntries++;
   overflowEntries--;
+
+  DPRINTF(Ras, "Ras returned %s to index=%d usedEntries=%d overflowEntries=%d\n", return_addr, 
+      bos, usedEntries, overflowEntries);
+
 }

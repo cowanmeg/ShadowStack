@@ -1,6 +1,9 @@
 #include "cpu/pred/TestMemDevice.hh"
 #include "mem/packet.hh"
 #include "mem/request.hh"
+#include "debug/Ras.hh"
+
+#define PCSTATE_SIZE 16
 
 TestMemDevice::TestMemDevice(const Params *p) 
 	: MemObject(p) {
@@ -24,12 +27,11 @@ bool
 TestMemDevice::recvTimingResp(PacketPtr pkt) {
 	// TODO: FIX temp
 	if (pkt->hasData()) { // Read response
-		uint8_t data;
-		data = 0;
-		pkt->writeData(&data);
-		printf("Packet data %d\n", data);
-	} else { // write response
-		std::cout << "Packet has no data\n";
+		TheISA::PCState data;
+		pkt->writeDataToBlock((uint8_t*) &data, PCSTATE_SIZE);
+
+		DPRINTF(Ras, "Read back data from overflow stack %s\n", data);
+		RAS->restoreAddr(data);
 	}
 
 	delete pkt;
@@ -42,42 +44,47 @@ TestMemDevice::isConnected() {
 	return port->isConnected();
 }
 
-void
-TestMemDevice::writeReq() { 
-//TestMemDevice::sendReq(TheISA::PCState data) {
+bool
+TestMemDevice::writeReq(TheISA::PCState addr) { 
 	//create a request packet
 	// TODO incrememnt overflowPaddr
 	if (busy)
-		return;
+		return false;
+	//std::cout << "size: " << sizeof(addr) << std::endl;
+
 	Request::Flags flags;
 	flags.set(Request::UNCACHEABLE);
-  	Request *req = new Request(overflowPaddr, 1, flags, 0);
+  	Request *req = new Request(overflowPaddr, PCSTATE_SIZE, flags, 0);
 
   	Packet *pkt = new Packet(req, MemCmd::WriteReq);
-	// TEMP
-	uint8_t *data = new uint8_t[1];
-	data[0] = 27;
+	uint8_t *data = new uint8_t[PCSTATE_SIZE];
+	std::memcpy(data, &addr, PCSTATE_SIZE);
 	pkt->dataStatic(data);
-	std::cout << "Writing packet with data 27\n";
+
+	DPRINTF(Ras, "Writing data to overflow stack %s\n", addr);
 	port->sendTimingReq(pkt);
-	std::cout << "Sent write packet\n";
 	busy = true;
+	overflowPaddr += PCSTATE_SIZE*8;
+	return true;
 } 
 
-void
+bool
 TestMemDevice::readReq() {
 	if (busy)
-		return;
+		return false;
+	
+	overflowPaddr -= PCSTATE_SIZE*8;
 	Request::Flags flags;
 	flags.set(Request::UNCACHEABLE);
-  	Request *req = new Request(overflowPaddr, 1, flags, 0);
+  	Request *req = new Request(overflowPaddr, PCSTATE_SIZE, flags, 0);
 
 	Packet *pkt = new Packet(req, MemCmd::ReadReq);
-	uint8_t *newData = new uint8_t[1];
+	uint8_t *newData = new uint8_t[PCSTATE_SIZE];
 	pkt->dataDynamic(newData);
-	std::cout << "Sendng read packet!\n";
+
 	port->sendTimingReq(pkt);
 	busy = true;
+	return true;
 }
 
 TestMemDevice*

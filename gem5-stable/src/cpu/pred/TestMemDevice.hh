@@ -1,8 +1,11 @@
 #ifndef __TEST_HH__
 #define __TEST_HH__
 
+class ReturnAddrStack;
+
 #include "mem/mem_object.hh"
 #include "params/TestMemDevice.hh"
+#include "cpu/pred/ras.hh"
 
 class TestMemDevice : public MemObject {
 protected:
@@ -37,9 +40,14 @@ public:
 
 	TestMemDevice(const Params *p);
 	~TestMemDevice();
+
+	void assignRas(ReturnAddrStack *_RAS) {
+		RAS = _RAS;
+	}
+
 	bool isConnected();
- 	void writeReq();
-	void readReq();	
+ 	bool writeReq(TheISA::PCState addr);
+	bool readReq();	
 
 	virtual BaseMasterPort& getMasterPort(const std::string &if_name, 
 		PortID idx = InvalidPortID);
@@ -47,6 +55,7 @@ public:
 private:
 	Addr overflowPaddr;
 	bool busy;
+	ReturnAddrStack *RAS;
 
 };
 

@@ -53,7 +53,8 @@ class ReturnAddrStack
      *  @param numEntries Number of entries in the RAS.
      */
     void init(unsigned numEntries);
-    /* Initializes RAS with TestMemDevice to use for overflow */
+
+    /* Initializes RAS with TestMemDevice used for overflow */
     void assignPort(TestMemDevice *dev);
 
     void reset();
@@ -66,6 +67,7 @@ class ReturnAddrStack
     unsigned topIdx()
     { return tos; }
 
+    /** Returns the index of the bottom of the RAS. */
     unsigned bottomIdx()
     { return bos; }
 
@@ -87,10 +89,17 @@ class ReturnAddrStack
      bool full() { return usedEntries == numEntries; 
 		 }
 
-    bool triggerOverflow();
-    bool triggerUnderflow();
-    void writeToShadowStack();
-    void restoreFromShadowStack();
+    /** Checks if the RAS is about to underflow and if so sends a request
+    to restore entries */
+    void checkUnderflow();
+
+    /** Checks if the RAS is about to overflow and if so sends out to 
+    bottom most address to the overflow stack*/
+    void checkOverflow();
+
+    /** Writes back a return address returned from overflow stack
+    back into the RAS*/
+    void restoreAddr(const TheISA::PCState &return_addr);
 
     void print();
   private:
@@ -135,6 +144,7 @@ class ReturnAddrStack
     /** The bottom of stack index. */
     unsigned bos;
 
+    /** Pointer to device that handles overflow stack*/
     TestMemDevice *dev;
     RC4 rc;
 };
