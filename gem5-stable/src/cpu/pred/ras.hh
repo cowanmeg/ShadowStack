@@ -97,6 +97,8 @@ class ReturnAddrStack
     /** Increments the top of stack index. */
     inline void incrTos()
     { 
+        if (tos + 1 == numEntries)
+          std::cout << "Overflow not handled yet\n";
         if (++tos == numEntries) tos = 0;
     }
 

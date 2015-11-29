@@ -6,7 +6,7 @@ TestMemDevice::TestMemDevice(const Params *p)
 	: MemObject(p) {
 	port = new ShadowStackPort(name() + ".port", this);
 	overflowPaddr = 512000000; // End of DRAM addr range
-	busy = false;
+	busy = false; // Don't know if this is necessary
 }
 
 TestMemDevice::~TestMemDevice() {
@@ -23,12 +23,12 @@ TestMemDevice::getMasterPort(const std::string &if_name, PortID idx) {
 bool
 TestMemDevice::recvTimingResp(PacketPtr pkt) {
 	// TODO: FIX temp
-	if (pkt->hasData()) {
+	if (pkt->hasData()) { // Read response
 		uint8_t data;
 		data = 0;
 		pkt->writeData(&data);
-		std::cout << "Packet data " << data << std::endl;
-	} else {
+		printf("Packet data %d\n", data);
+	} else { // write response
 		std::cout << "Packet has no data\n";
 	}
 

@@ -61,12 +61,13 @@ ReturnAddrStack::reset()
 void
 ReturnAddrStack::push(const TheISA::PCState &return_addr)
 {
-    /*if (dev->isConnected()) {
+    // Test REMOVE 
+    if (dev->isConnected()) {
       if (tos%2 == 0)
         dev->writeReq();
       else
         dev->readReq();
-     } */
+     }
 
     incrTos();
 
