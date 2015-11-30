@@ -86,10 +86,12 @@ class ReturnAddrStack
      */
     void restore(unsigned top_entry_idx, unsigned bottom_entry_idx, const TheISA::PCState &restored);
 
-     bool empty() { return usedEntries == 0; }
+    /* Checks if the corrTarget is located deeper in the RAS - necessary for setjmp and longjmp */
+    void unroll(const TheISA::PCState &corrTarget);
 
-     bool full() { return usedEntries == numEntries; 
-		 }
+    bool empty() { return usedEntries == 0; }
+
+    bool full() { return usedEntries == numEntries; }
 
     /** Checks if the RAS is about to underflow and if so sends a request
     to restore entries */

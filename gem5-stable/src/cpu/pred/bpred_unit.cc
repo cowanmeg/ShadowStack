@@ -507,8 +507,7 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
             // meghan: Incorrect RAS address Security attack?
             DPRINTF(Ras, "RAS Incorrect! RAS Index %d caller %s\n", (*hist_it).RASIndex, (*hist_it).RASTarget);
             RAS[tid].print();
-            std::cout << "RAS incorrect - Return Addr modified" << std::endl;
-            //exit(1);
+            RAS[tid].unroll(corrTarget);
         }
 
         update((*hist_it).pc, actually_taken,

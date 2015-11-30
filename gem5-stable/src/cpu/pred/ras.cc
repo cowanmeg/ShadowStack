@@ -77,11 +77,11 @@ ReturnAddrStack::push(const TheISA::PCState &return_addr)
 void
 ReturnAddrStack::pop(bool ignoreValue)
 {
+    DPRINTF(Ras, "Pop started\n");
     TheISA::PCState popped_addr = addrStack[tos];
 
     if (usedEntries > 0) {
         --usedEntries;
-        decrTos();
     } else if (ignoreValue && overflowEntries > 0) { // Cheating - when popping off from 
       // a bad prediction if it goes into the overflow just get rid of it.
       overflowEntries--;
@@ -94,7 +94,7 @@ ReturnAddrStack::pop(bool ignoreValue)
       print();
     }
     
-    
+    decrTos();
     
     DPRINTF(Ras, "RAS popped %s, bos=%d, tos=%d, usedEntries=%d\n", popped_addr, bos, tos, usedEntries);
 
@@ -115,7 +115,7 @@ ReturnAddrStack::restore(unsigned top_entry_idx, unsigned bottom_entry_idx,
 
 void
 ReturnAddrStack::print() {
-    for (int i = tos; i>=0; i--)
+    for (int i = tos; i > bos; i--)
         DPRINTF(Ras, "\ttos=%d, %s\n", i, addrStack[i]);
 }
 
@@ -147,13 +147,30 @@ ReturnAddrStack::checkUnderflow() {
 
 void
 ReturnAddrStack::restoreAddr(const TheISA::PCState &return_addr) {
-  addrStack[bos] = return_addr;
-  decrBos();
+  if (overflowEntries > 0) {
+    addrStack[bos] = return_addr;
+    decrBos();
 
-  usedEntries++;
-  overflowEntries--;
+    usedEntries++;
+    overflowEntries--;
 
-  DPRINTF(Ras, "Ras returned %s to bos=%d usedEntries=%d overflowEntries=%d\n", return_addr, 
-      bos, usedEntries, overflowEntries);
+    DPRINTF(Ras, "Ras returned %s to bos=%d usedEntries=%d overflowEntries=%d\n", return_addr, 
+        bos, usedEntries, overflowEntries);
+  } 
 
+}
+
+void
+ReturnAddrStack::unroll(const TheISA::PCState &corrTarget) {
+  /* Match the pc corrTarget with the next pc of entries in the RAS */
+  DPRINTF(Ras, "Unrolling the RAS to find %s\n", corrTarget);
+  for (int i = tos; i > bos; i--) {
+    if (corrTarget.pc() == addrStack[i].npc())
+      tos = i-1;
+      DPRINTF(Ras, "Found a match - Resetting the RAS\n");
+      print();
+      return;
+  }
+  DPRINTF(Ras, "RAS actually has an incorrect value\n");
+  std::cout << "No address match! Security Attack!!\n!";
 }
