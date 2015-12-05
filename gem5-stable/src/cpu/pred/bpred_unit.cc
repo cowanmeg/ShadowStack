@@ -213,8 +213,8 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
             predict_record.wasReturn = true;
             // If it's a function return call, then look up the address
             // in the RAS.
-            TheISA::PCState rasTop = RAS[tid].top();
-            target = TheISA::buildRetPC(pc, rasTop);
+            ReturnAddrStack::RASEntry rasTop = RAS[tid].top();
+            target = TheISA::buildRetPC(pc, rasTop.addr);
 
             // Record the top entry of the RAS, and its index.
             predict_record.usedRAS = true;
@@ -329,8 +329,8 @@ BPredUnit::predictInOrder(const StaticInstPtr &inst, const InstSeqNum &seqNum,
 
             // If it's a function return call, then look up the address
             // in the RAS.
-            TheISA::PCState rasTop = RAS[tid].top();
-            target = TheISA::buildRetPC(instPC, rasTop);
+            ReturnAddrStack::RASEntry rasTop = RAS[tid].top();
+            target = TheISA::buildRetPC(instPC, rasTop.addr);
 
             // Record the top entry of the RAS, and its index.
             predict_record.usedRAS = true;
@@ -431,7 +431,7 @@ BPredUnit::squash(const InstSeqNum &squashed_sn, ThreadID tid)
         if (pred_hist.front().usedRAS) {
             DPRINTF(Ras, "[tid:%i]: Restoring top of RAS to: %i,"
                     " target: %s.\n", tid,
-                    pred_hist.front().RASIndex, pred_hist.front().RASTarget);
+                    pred_hist.front().RASIndex, pred_hist.front().RASTarget.addr);
 
             RAS[tid].restore(pred_hist.front().RASIndex, pred_hist.front().RASBos,
                              pred_hist.front().RASTarget);
@@ -505,7 +505,7 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
         if ((*hist_it).usedRAS) {
             ++RASIncorrect;
             // meghan: Incorrect RAS address Security attack?
-            DPRINTF(Ras, "RAS Incorrect! RAS Index %d caller %s\n", (*hist_it).RASIndex, (*hist_it).RASTarget);
+            DPRINTF(Ras, "RAS Incorrect! RAS Index %d caller %s\n", (*hist_it).RASIndex, (*hist_it).RASTarget.addr);
             RAS[tid].print();
             RAS[tid].unroll(corrTarget);
         }
@@ -536,7 +536,7 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
                         hist_it->seqNum, hist_it->pc);
                 DPRINTF(Ras, "[tid:%i]: Restoring top of RAS"
                         " to: %i, target: %s.\n", tid,
-                        hist_it->RASIndex, hist_it->RASTarget);
+                        hist_it->RASIndex, hist_it->RASTarget.addr);
                 RAS[tid].restore(hist_it->RASIndex, hist_it->RASBos, hist_it->RASTarget);
                 hist_it->usedRAS = false;
            } else if (hist_it->wasCall && hist_it->pushedRAS) {

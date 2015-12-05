@@ -46,6 +46,12 @@
 class ReturnAddrStack
 {
   public:
+    
+    typedef struct {
+        TheISA::PCState addr;
+        uint8_t count;
+    } RASEntry;
+
     /** Creates a return address stack, but init() must be called prior to
      *  use.
      */
@@ -62,7 +68,7 @@ class ReturnAddrStack
     void reset();
 
     /** Returns the top address on the RAS. */
-    TheISA::PCState top()
+    RASEntry top()
     { return addrStack[tos]; }
 
     /** Returns the index of the top of the RAS. */
@@ -84,7 +90,7 @@ class ReturnAddrStack
      *  @param top_entry_idx The index of the RAS that will now be the top.
      *  @param restored The new target address of the new top of the RAS.
      */
-    void restore(unsigned top_entry_idx, unsigned bottom_entry_idx, const TheISA::PCState &restored);
+    void restore(unsigned top_entry_idx, unsigned bottom_entry_idx, const RASEntry &restored);
 
     /* Checks if the corrTarget is located deeper in the RAS - necessary for setjmp and longjmp */
     void unroll(const TheISA::PCState &corrTarget);
@@ -103,7 +109,7 @@ class ReturnAddrStack
 
     /** Writes back a return address returned from overflow stack
     back into the RAS*/
-    void restoreAddr(const TheISA::PCState &return_addr);
+    void restoreAddr(const RASEntry &return_addr);
 
     void print();
   private:
@@ -131,7 +137,7 @@ class ReturnAddrStack
     }
 
     /** The RAS itself. */
-    std::vector<TheISA::PCState> addrStack;
+    std::vector<RASEntry> addrStack;
 
     /** The number of entries in the RAS. */
     unsigned numEntries;

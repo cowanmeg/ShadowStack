@@ -3,7 +3,7 @@
 #include "mem/request.hh"
 #include "debug/Ras.hh"
 
-#define PCSTATE_SIZE 16
+#define PCSTATE_SIZE 17
 
 TestMemDevice::TestMemDevice(const Params *p) 
 	: MemObject(p) {
@@ -27,10 +27,10 @@ bool
 TestMemDevice::recvTimingResp(PacketPtr pkt) {
 	// TODO: FIX temp
 	if (pkt->hasData()) { // Read response
-		TheISA::PCState data;
+		ReturnAddrStack::RASEntry data;
 		pkt->writeDataToBlock((uint8_t*) &data, PCSTATE_SIZE);
 
-		DPRINTF(Ras, "Read back data from overflow stack %s\n", data);
+		DPRINTF(Ras, "Read back data from overflow stack %s count %d\n", data.addr, data.count);
 		RAS->restoreAddr(data);
 	}
 
@@ -45,7 +45,7 @@ TestMemDevice::isConnected() {
 }
 
 bool
-TestMemDevice::writeReq(TheISA::PCState addr) { 
+TestMemDevice::writeReq(uint8_t *data) { 
 	//create a request packet
 	// TODO incrememnt overflowPaddr
 	if (busy)
@@ -57,11 +57,11 @@ TestMemDevice::writeReq(TheISA::PCState addr) {
   	Request *req = new Request(overflowPaddr, PCSTATE_SIZE, flags, 0);
 
   	Packet *pkt = new Packet(req, MemCmd::WriteReq);
-	uint8_t *data = new uint8_t[PCSTATE_SIZE];
-	std::memcpy(data, &addr, PCSTATE_SIZE);
+	//uint8_t *data = new uint8_t[PCSTATE_SIZE];
+	//std::memcpy(data, &addr, PCSTATE_SIZE);
 	pkt->dataStatic(data);
 
-	DPRINTF(Ras, "Writing data to overflow stack %s\n", addr);
+	//DPRINTF(Ras, "Writing data to overflow stack %s\n", addr);
 	port->sendTimingReq(pkt);
 	busy = true;
 	overflowPaddr += PCSTATE_SIZE*8;
