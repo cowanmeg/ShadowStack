@@ -60,21 +60,19 @@ ReturnAddrStack::reset()
 void
 ReturnAddrStack::push(const TheISA::PCState &return_addr)
 {
-<<<<<<< HEAD
     incrTos();
 
     addrStack[tos] = return_addr;
    // std::cout<<" before: "<< (uint64_t)return_addr.npc; 
-    uint64_t temp = (uint64_t)(return_addr.npc());
-    std::cout<<" before: "<< temp;
-    uint64_t res = rc.encrypt64(temp);
-    std::cout << " encrypted: "<< res;
-    uint64_t d = rc.encrypt64(res);
-    std::cout<<" after: "<< d<<endl;
+   // uint64_t temp = (uint64_t)(return_addr.npc());
+   // std::cout<<" before: "<< temp;
+   // uint64_t res = rc.encrypt64(temp);
+   // std::cout << " encrypted: "<< res;
+   // uint64_t d = rc.encrypt64(res);
+   // std::cout<<" after: "<< d<<endl;
 	
     if (usedEntries != numEntries) {
         ++usedEntries;
-=======
     if (return_addr == addrStack[tos].addr) {
        addrStack[tos].count++;
        DPRINTF(Ras, "RAS pushed same value %s, incremented count to %d\n", return_addr, addrStack[tos].count);
@@ -86,7 +84,6 @@ ReturnAddrStack::push(const TheISA::PCState &return_addr)
         } else {
           std::cout << "RAS overflowed :(\n";
         }
->>>>>>> dc02d0c539aafe8845027c5b8c1bc7f146a0464f
     }
     DPRINTF(Ras, "RAS pushed %s bos=%d, tos=%d, usedEntries=%d\n", return_addr, bos, tos, usedEntries);
     
