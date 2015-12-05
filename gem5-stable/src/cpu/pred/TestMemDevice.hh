@@ -46,7 +46,7 @@ public:
 	}
 
 	bool isConnected();
- 	bool writeReq(TheISA::PCState addr);
+ 	bool writeReq(uint8_t *data);
 	bool readReq();	
 
 	virtual BaseMasterPort& getMasterPort(const std::string &if_name, 

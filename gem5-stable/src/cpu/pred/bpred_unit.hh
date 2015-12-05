@@ -210,7 +210,7 @@ class BPredUnit : public SimObject
         PredictorHistory(const InstSeqNum &seq_num, Addr instPC,
                          bool pred_taken, void *bp_history,
                          ThreadID _tid)
-            : seqNum(seq_num), pc(instPC), bpHistory(bp_history), RASTarget(0),
+            : seqNum(seq_num), pc(instPC), bpHistory(bp_history), RASTarget(ReturnAddrStack::RASEntry{0,0}),
               RASIndex(0), RASBos(0), tid(_tid), predTaken(pred_taken), usedRAS(0), pushedRAS(0),
               wasCall(0), wasReturn(0), wasSquashed(0)
         {}
@@ -232,7 +232,7 @@ class BPredUnit : public SimObject
         void *bpHistory;
 
         /** The RAS target (only valid if a return). */
-        TheISA::PCState RASTarget;
+        ReturnAddrStack::RASEntry RASTarget;
 
         /** The RAS index of the instruction (only valid if a call). */
         unsigned RASIndex; // tos
