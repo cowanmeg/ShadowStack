@@ -30,7 +30,6 @@
 
 #include "cpu/pred/ras.hh"
 #include "debug/Ras.hh"
-
 void
 ReturnAddrStack::init(unsigned _numEntries)
 {
@@ -64,7 +63,14 @@ ReturnAddrStack::push(const TheISA::PCState &return_addr)
     incrTos();
 
     addrStack[tos] = return_addr;
-
+   // std::cout<<" before: "<< (uint64_t)return_addr.npc; 
+    uint64_t temp = (uint64_t)(return_addr.npc());
+    std::cout<<" before: "<< temp;
+    uint64_t res = rc.encrypt64(temp);
+    std::cout << " encrypted: "<< res;
+    uint64_t d = rc.encrypt64(res);
+    std::cout<<" after: "<< d<<endl;
+	
     if (usedEntries != numEntries) {
         ++usedEntries;
     }
