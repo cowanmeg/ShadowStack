@@ -87,8 +87,6 @@ ReturnAddrStack::pop(bool ignoreValue)
     TheISA::PCState popped_addr = addrStack[tos].addr;
     if (count > 1) {
         addrStack[tos].count--;
-        if (addrStack[tos].count == 0)
-            decrTos();
     } else if (addrStack[tos].count == 1 && usedEntries > 0) {
         --usedEntries;
         decrTos();
@@ -118,16 +116,19 @@ ReturnAddrStack::restore(unsigned top_entry_idx, unsigned bottom_entry_idx,
 {
     tos = top_entry_idx;
     bos = bottom_entry_idx;
-    usedEntries = (tos > bos) ? tos-bos-1 : numEntries-bos+tos;
+    usedEntries = (tos > bos) ? tos-bos : numEntries-bos+tos;
     addrStack[tos] = restored;
     
     DPRINTF(Ras, "RAS restored %s count=%d, bos=%d, tos=%d, usedEntries=%d\n", restored.addr,restored.count, bos, tos, usedEntries);
+    print();
 }
 
 void
 ReturnAddrStack::print() {
-    for (int i = tos; i > bos; i--)
+    for (uint64_t i = tos; i > bos; i--)
         DPRINTF(Ras, "\ttos=%d, %s count %d\n", i, addrStack[i].addr, addrStack[i].count);
+    DPRINTF(Ras, "\ttos=0, %s count %d\n", addrStack[0].addr, addrStack[0].count);
+
 }
 
 void 
@@ -177,14 +178,17 @@ void
 ReturnAddrStack::unroll(const TheISA::PCState &corrTarget) {
   /* Match the pc corrTarget with the next pc of entries in the RAS */
   DPRINTF(Ras, "Unrolling the RAS to find %s\n", corrTarget);
+  uint64_t temp_usedEntries = usedEntries;
   for (int i = tos; i > bos; i--) {
+    temp_usedEntries--;
     if (corrTarget.pc() == addrStack[i].addr.npc()) {
       tos = i-1;
+      usedEntries = temp_usedEntries;
       DPRINTF(Ras, "Found a match - Resetting the RAS\n");
       print();
       return;
     }
   }
   DPRINTF(Ras, "RAS actually has an incorrect value\n");
-  std::cout << "No address match! Security Attack!!\n!";
+  std::cout << "No address match! Security Attack!!\n";
 }

@@ -202,6 +202,10 @@ class BPredUnit : public SimObject
     void dump();
 
   private:
+    //debug Meghan
+    int calls;
+    int returns;
+
     struct PredictorHistory {
         /**
          * Makes a predictor history struct that contains any
@@ -212,7 +216,7 @@ class BPredUnit : public SimObject
                          ThreadID _tid)
             : seqNum(seq_num), pc(instPC), bpHistory(bp_history), RASTarget(ReturnAddrStack::RASEntry{0,0}),
               RASIndex(0), RASBos(0), tid(_tid), predTaken(pred_taken), usedRAS(0), pushedRAS(0),
-              wasCall(0), wasReturn(0), wasSquashed(0)
+              wasCall(0), wasReturn(0), wasSquashed(0), usedBTB(0)
         {}
 
         bool operator==(const PredictorHistory &entry) const {
@@ -258,6 +262,8 @@ class BPredUnit : public SimObject
 
         /** Whether this instruction has already mispredicted/updated bp */
         bool wasSquashed;
+        
+        bool usedBTB;
     };
 
     typedef std::deque<PredictorHistory> History;

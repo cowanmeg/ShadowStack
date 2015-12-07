@@ -64,6 +64,8 @@ BPredUnit::BPredUnit(const Params *params)
       RAS(numThreads),
       instShiftAmt(params->instShiftAmt)
 {
+    calls = 0;
+    returns = 0;
     for (auto& r : RAS)
         r.init(params->RASSize);
 }
@@ -236,7 +238,7 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
 
            if (BTB.valid(pc.instAddr(), tid)) {
                 ++BTBHits;
-
+                predict_record.usedBTB = true;
                 // Use the BTB to get the target addr.
                 target = BTB.lookup(pc.instAddr(), tid);
 
@@ -256,9 +258,12 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
                               " called for %s\n", tid, seqNum, pc);
                       pred_taken = false;
                       TheISA::advancePC(target, inst);
-                } else if (inst->isCall() && !inst->isUncondCtrl()) {
+                } else if (inst->isCall()) {
+                      // This should never get called
                       //RAS[tid].pop();
                       //predict_record.pushedRAS = false;
+                      predict_record.usedBTB = true;
+                      target = BTB.lookup(pc.instAddr(), tid);
                       DPRINTF(Ras, "Don't know the target of the call\n");
                 }
                 //TheISA::advancePC(target, inst);
@@ -502,17 +507,20 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
         }
 
 
-        if ((*hist_it).usedRAS) {
+        if (hist_it->wasReturn && hist_it->usedRAS) {
             ++RASIncorrect;
             // meghan: Incorrect RAS address Security attack?
-            DPRINTF(Ras, "RAS Incorrect! RAS Index %d caller %s\n", (*hist_it).RASIndex, (*hist_it).RASTarget.addr);
-            RAS[tid].print();
-            RAS[tid].unroll(corrTarget);
+            // some weird error where gem5 is setting corrTarget to 0x34=>0x38 or 0x50=>0x54
+            if (corrTarget.pc() != 0x34 and corrTarget.pc() != 0x50) {
+                DPRINTF(Ras, "RAS Incorrect! RAS Index %d caller %s target %s\n", (*hist_it).RASIndex, (*hist_it).RASTarget.addr, corrTarget);
+                RAS[tid].print();
+                RAS[tid].unroll(corrTarget);
+            }
         }
 
         update((*hist_it).pc, actually_taken,
                pred_hist.front().bpHistory, true);
-        hist_it->wasSquashed = true;
+        hist_it->wasSquashed = true; 
 
         if (actually_taken) {
             if (hist_it->wasReturn && !hist_it->usedRAS) {
