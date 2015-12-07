@@ -41,6 +41,7 @@
 #include "base/types.hh"
 #include "debug/Ras.hh"
 
+#define PCSTATE_SIZE 24
 
 /** Return address stack class, implements a simple RAS. */
 class ReturnAddrStack

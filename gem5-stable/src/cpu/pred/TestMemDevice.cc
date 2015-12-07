@@ -3,12 +3,12 @@
 #include "mem/request.hh"
 #include "debug/Ras.hh"
 
-#define PCSTATE_SIZE 17
+#define STARTADDR 512000000
 
 TestMemDevice::TestMemDevice(const Params *p) 
 	: MemObject(p) {
 	port = new ShadowStackPort(name() + ".port", this);
-	overflowPaddr = 512000000; // End of DRAM addr range
+	overflowPaddr = STARTADDR; // End of DRAM addr range
 	busy = false; // Don't know if this is necessary
 }
 
@@ -50,15 +50,11 @@ TestMemDevice::writeReq(uint8_t *data) {
 	// TODO incrememnt overflowPaddr
 	if (busy)
 		return false;
-	//std::cout << "size: " << sizeof(addr) << std::endl;
-
 	Request::Flags flags;
 	flags.set(Request::UNCACHEABLE);
   	Request *req = new Request(overflowPaddr, PCSTATE_SIZE, flags, 0);
 
   	Packet *pkt = new Packet(req, MemCmd::WriteReq);
-	//uint8_t *data = new uint8_t[PCSTATE_SIZE];
-	//std::memcpy(data, &addr, PCSTATE_SIZE);
 	pkt->dataStatic(data);
 
 	//DPRINTF(Ras, "Writing data to overflow stack %s\n", addr);
@@ -85,6 +81,11 @@ TestMemDevice::readReq() {
 	port->sendTimingReq(pkt);
 	busy = true;
 	return true;
+}
+
+void 
+TestMemDevice::resetAddr(unsigned numEntries) {
+	overflowPaddr = STARTADDR + PCSTATE_SIZE * numEntries;
 }
 
 TestMemDevice*

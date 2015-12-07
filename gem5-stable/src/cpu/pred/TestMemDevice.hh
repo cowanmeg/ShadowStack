@@ -49,6 +49,8 @@ public:
  	bool writeReq(uint8_t *data);
 	bool readReq();	
 
+	void resetAddr(unsigned numEntries);
+
 	virtual BaseMasterPort& getMasterPort(const std::string &if_name, 
 		PortID idx = InvalidPortID);
 

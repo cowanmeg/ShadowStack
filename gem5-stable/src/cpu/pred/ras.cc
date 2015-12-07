@@ -127,7 +127,7 @@ ReturnAddrStack::restore(unsigned top_entry_idx, unsigned bottom_entry_idx,
 {
     tos = top_entry_idx;
     bos = bottom_entry_idx;
-    usedEntries = (tos > bos) ? tos-bos : numEntries-bos+tos;
+    usedEntries = (tos >= bos) ? tos-bos : numEntries-bos+tos;
     addrStack[tos] = restored;
     
     DPRINTF(Ras, "RAS restored %s count=%d, bos=%d, tos=%d, usedEntries=%d\n", restored.addr,restored.count, bos, tos, usedEntries);
@@ -147,8 +147,9 @@ ReturnAddrStack::checkOverflow() {
     if (tos > (numEntries * 3/4)) {
       // Write the bottom entry to the overflow stack
       RASEntry entry = addrStack[bos+1];
-      uint8_t *data = new uint8_t[17];
-      std::memcpy(data, &entry, 17);
+      //std::cout << "size: " << sizeof(entry) << std::endl;
+      uint8_t *data = new uint8_t[PCSTATE_SIZE];
+      std::memcpy(data, &entry, PCSTATE_SIZE);
       if (dev->writeReq(data)) {
         // Update RAS sate
         incrBos();
@@ -163,7 +164,7 @@ ReturnAddrStack::checkOverflow() {
 
 void 
 ReturnAddrStack::checkUnderflow() {
-    if ( (overflowEntries > 0) && (tos < (numEntries * 1/4)) ) {
+    if ( (overflowEntries > 0) && (tos < (numEntries * 1/2)) ) {
       DPRINTF(Ras, "RAS triggered underflow - restore entries\n");
       dev->readReq();
     }

@@ -30,17 +30,93 @@
 
 #include <stdio.h>
 
-void goodbye() {
-  printf("Goodbye\n");
-}
-
-void hello() {
-  printf("Hello\n");
-  goodbye();
+ void seventeen() {
+  printf("seventeen\n");
 } 
+
+ void sixteen() {
+  printf("Sixteen\n");
+  seventeen();
+} 
+
+ void fifteen() {
+  printf("Fifteen\n");
+  sixteen();
+} 
+
+ void fourteen() {
+  printf("Fourteen\n");
+  fifteen();
+} 
+
+ void thirteen() {
+  printf("Thirteen\n");
+  fourteen();
+} 
+
+ void twelve() {
+  printf("Twelve\n");
+  thirteen();
+} 
+
+ void eleven() {
+  printf("Eleven\n");
+  twelve();
+} 
+
+ void ten() {
+  printf("Ten\n");
+  eleven();
+} 
+
+ void nine() {
+  printf("Nine\n");
+  ten();
+} 
+
+
+ void eight() {
+  printf("Eight\n");
+  nine();
+} 
+
+ void seven() {
+  printf("Seven\n");
+  eight();
+} 
+
+ void six() {
+  printf("Six\n");
+  seven();
+} 
+
+void five() {
+  printf("Five\n");
+  six();
+} 
+
+void four() {
+  printf("Four\n");
+  five();
+} 
+
+void three() {
+  printf("Three\n");
+  four();
+} 
+
+void two() {
+  printf("Two\n");
+  three();
+} 
+
+void one() {
+  printf("One\n");
+  two();
+}
 
 int main()
 {
-  hello();
+  one();
 }
 
