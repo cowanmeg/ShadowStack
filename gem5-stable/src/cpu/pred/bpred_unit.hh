@@ -59,6 +59,8 @@
 #include "sim/probe/pmu.hh"
 #include "sim/sim_object.hh"
 
+
+
 /**
  * Basically a wrapper class to hold both the branch predictor
  * and the BTB.
@@ -129,6 +131,11 @@ class BPredUnit : public SimObject
     void squash(const InstSeqNum &squashed_sn,
                 const TheISA::PCState &corr_target,
                 bool actually_taken, ThreadID tid);
+
+    void squash(const InstSeqNum &squashed_sn,
+                const TheISA::PCState &corr_target,
+                bool actually_taken, ThreadID tid, 
+                const TheISA::PCState &mispredictInst);
 
     /**
      * @param bp_history Pointer to the history object.  The predictor

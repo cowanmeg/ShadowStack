@@ -1010,7 +1010,8 @@ DefaultFetch<Impl>::checkSignalsAndUpdate(ThreadID tid)
             branchPred->squash(fromCommit->commitInfo[tid].doneSeqNum,
                               fromCommit->commitInfo[tid].pc,
                               fromCommit->commitInfo[tid].branchTaken,
-                              tid);
+                              tid,
+                              fromCommit->commitInfo[tid].mispredictInst->pcState());
         } else {
             branchPred->squash(fromCommit->commitInfo[tid].doneSeqNum,
                               tid);
@@ -1033,7 +1034,8 @@ DefaultFetch<Impl>::checkSignalsAndUpdate(ThreadID tid)
             branchPred->squash(fromDecode->decodeInfo[tid].doneSeqNum,
                               fromDecode->decodeInfo[tid].nextPC,
                               fromDecode->decodeInfo[tid].branchTaken,
-                              tid);
+                              tid,
+                              fromDecode->decodeInfo[tid].mispredictInst->pcState());
         } else {
             branchPred->squash(fromDecode->decodeInfo[tid].doneSeqNum,
                               tid);

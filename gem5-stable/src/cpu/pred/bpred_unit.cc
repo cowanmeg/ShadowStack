@@ -192,6 +192,7 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
     if (pred_taken) {
         // if predicting a call save the caller address in the RAS
         if (inst->isCall()) {
+                //TheISA::PCState predictedTarget = TheISA::buildRetPC(pc, pc);
                 RAS[tid].push(pc);
                 predict_record.pushedRAS = true;
 
@@ -201,12 +202,7 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
 
                 DPRINTF(Ras, "[tid:%i]: Instruction %s was a "
                         "call, adding %s to the RAS index: %i.\n",
-                        tid, pc, pc, RAS[tid].topIdx());
-
-                /*if (inst->isIndirectCtrl())
-                  std::cout << "Indirect call\n";
-                if (!inst->isDirectCtrl())
-                  std::cout << "Not direct call\n";*/
+                        tid, pc, target, RAS[tid].topIdx());
         }
 
         // Predicting branch targets
@@ -217,6 +213,7 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
             // in the RAS.
             ReturnAddrStack::RASEntry rasTop = RAS[tid].top();
             target = TheISA::buildRetPC(pc, rasTop.addr);
+            //target = rasTop.addr;
 
             // Record the top entry of the RAS, and its index.
             predict_record.usedRAS = true;
@@ -225,6 +222,7 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
             predict_record.RASBos = RAS[tid].bottomIdx();
 
             RAS[tid].pop();
+            predict_record.usedBTB = true; // RAS return is speculative
             
             DPRINTF(Ras, "[tid:%i]: Instruction %s is a return, "
                     "RAS predicted target: %s, RAS index: %i.\n",
@@ -238,7 +236,6 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
 
            if (BTB.valid(pc.instAddr(), tid)) {
                 ++BTBHits;
-                predict_record.usedBTB = true;
                 // Use the BTB to get the target addr.
                 target = BTB.lookup(pc.instAddr(), tid);
 
@@ -257,16 +254,14 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
                       DPRINTF(Branch, "[tid:%i]:[sn:%i] btbUpdate"
                               " called for %s\n", tid, seqNum, pc);
                       pred_taken = false;
-                      TheISA::advancePC(target, inst);
+                      //TheISA::advancePC(target, inst);
                 } else if (inst->isCall()) {
-                      // This should never get called
-                      //RAS[tid].pop();
-                      //predict_record.pushedRAS = false;
-                      predict_record.usedBTB = true;
-                      target = BTB.lookup(pc.instAddr(), tid);
-                      DPRINTF(Ras, "Don't know the target of the call\n");
+                      RAS[tid].pop();
+                      predict_record.pushedRAS = false;
+                      //target = BTB.lookup(pc.instAddr(), tid);
+                      DPRINTF(Ras, "[sn: %i] Don't know the target of the call - pretending not taken\n", seqNum);
                 }
-                //TheISA::advancePC(target, inst);
+                TheISA::advancePC(target, inst);
            }
         }
     }
@@ -465,7 +460,15 @@ BPredUnit::squash(const InstSeqNum &squashed_sn, ThreadID tid)
 void
 BPredUnit::squash(const InstSeqNum &squashed_sn,
                   const TheISA::PCState &corrTarget,
-                  bool actually_taken, ThreadID tid)
+                  bool actually_taken, ThreadID tid) {
+    squash(squashed_sn, corrTarget, actually_taken, tid, corrTarget);
+}
+
+void
+BPredUnit::squash(const InstSeqNum &squashed_sn,
+                  const TheISA::PCState &corrTarget,
+                  bool actually_taken, ThreadID tid,
+                  const TheISA::PCState &mispredictInst)
 {
     // Now that we know that a branch was mispredicted, we need to undo
     // all the branches that have been seen up until this branch and
@@ -512,7 +515,9 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
             // meghan: Incorrect RAS address Security attack?
             // some weird error where gem5 is setting corrTarget to 0x34=>0x38 or 0x50=>0x54
             if (corrTarget.pc() != 0x34 and corrTarget.pc() != 0x50) {
-                DPRINTF(Ras, "RAS Incorrect! RAS Index %d caller %s target %s\n", (*hist_it).RASIndex, (*hist_it).RASTarget.addr, corrTarget);
+                DPRINTF(Ras, "RAS Incorrect! RAS Index %d predicted %s actual %s\n", (*hist_it).RASIndex, (*hist_it).RASTarget.addr, corrTarget);
+                if (hist_it->usedBTB)
+		            DPRINTF(Ras, "From an indirect call\n");
                 RAS[tid].print();
                 RAS[tid].unroll(corrTarget);
             }
@@ -529,6 +534,18 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
                          hist_it->pc);
                  RAS[tid].pop();
                  hist_it->usedRAS = true;
+            } else if (hist_it->wasCall) {
+                DPRINTF(Ras, "Didn't know target of indirect call\n");
+                if (hist_it->pushedRAS) {
+                    DPRINTF(Ras, "First pop incorrect value\n");
+                    RAS[tid].pop();
+                }
+                // set mispredictInst to be correct
+                TheISA::PCState corrInst(mispredictInst.pc());
+                DPRINTF(Ras, "[tid:%i]: Adding %s to the RAS index: %i.\n",
+                        tid, corrInst, RAS[tid].topIdx());
+                RAS[tid].push(corrInst);
+                hist_it->pushedRAS = true;
             }
 
             DPRINTF(Branch,"[tid: %i] BTB Update called for [sn:%i]"
