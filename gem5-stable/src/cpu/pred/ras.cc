@@ -60,9 +60,9 @@ ReturnAddrStack::reset()
 void
 ReturnAddrStack::push(const TheISA::PCState &return_addr)
 {
-    incrTos();
+    //incrTos();
 
-    addrStack[tos] = return_addr;
+    //addrStack[tos] = return_addr;
    // std::cout<<" before: "<< (uint64_t)return_addr.npc; 
    // uint64_t temp = (uint64_t)(return_addr.npc());
    // std::cout<<" before: "<< temp;
@@ -71,8 +71,8 @@ ReturnAddrStack::push(const TheISA::PCState &return_addr)
    // uint64_t d = rc.encrypt64(res);
    // std::cout<<" after: "<< d<<endl;
 	
-    if (usedEntries != numEntries) {
-        ++usedEntries;
+    //if (usedEntries != numEntries) {
+      //  ++usedEntries;
     if (return_addr == addrStack[tos].addr) {
        addrStack[tos].count++;
        DPRINTF(Ras, "RAS pushed same value %s, incremented count to %d\n", return_addr, addrStack[tos].count);
@@ -94,7 +94,6 @@ ReturnAddrStack::push(const TheISA::PCState &return_addr)
 void
 ReturnAddrStack::pop(bool ignoreValue)
 {
-    DPRINTF(Ras, "Pop started\n");
     uint8_t count = addrStack[tos].count;
     TheISA::PCState popped_addr = addrStack[tos].addr;
     if (count > 1) {
