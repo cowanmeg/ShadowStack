@@ -144,7 +144,7 @@ ReturnAddrStack::print() {
 
 void 
 ReturnAddrStack::checkOverflow() {
-    if (tos > (numEntries * 3/4)) {
+    if (usedEntries > (numEntries * 3/4)) {
       // Write the bottom entry to the overflow stack
       RASEntry entry = addrStack[bos+1];
       //std::cout << "size: " << sizeof(entry) << std::endl;
@@ -164,7 +164,7 @@ ReturnAddrStack::checkOverflow() {
 
 void 
 ReturnAddrStack::checkUnderflow() {
-    if ( (overflowEntries > 0) && (tos < (numEntries * 1/2)) ) {
+    if ( (overflowEntries > 0) && (usedEntries < (numEntries * 1/2)) ) {
       DPRINTF(Ras, "RAS triggered underflow - restore entries\n");
       dev->readReq();
     }

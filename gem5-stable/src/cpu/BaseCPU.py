@@ -220,7 +220,7 @@ class BaseCPU(MemObject):
         _cached_ports += ["itb.walker.port", "dtb.walker.port"]
 
     _uncached_slave_ports = []
-    _uncached_master_ports = ['testmemdevice.port']
+    _uncached_master_ports = []
     if buildEnv['TARGET_ISA'] == 'x86':
         _uncached_slave_ports += ["interrupts.pio", "interrupts.int_slave"]
         _uncached_master_ports += ["interrupts.int_master"]
@@ -250,6 +250,7 @@ class BaseCPU(MemObject):
 
     def connectCachedPorts(self, bus):
         for p in self._cached_ports:
+            print "self.%s = %s.slave" % (p, bus)
             exec('self.%s = bus.slave' % p)
 
     def connectUncachedPorts(self, bus):
@@ -274,7 +275,7 @@ class BaseCPU(MemObject):
         self.dcache = dc
         self.icache_port = ic.cpu_side
         self.dcache_port = dc.cpu_side
-        self._cached_ports = ['icache.mem_side', 'dcache.mem_side']
+        self._cached_ports = ['icache.mem_side', 'dcache.mem_side', 'testmemdevice.port']
         if buildEnv['TARGET_ISA'] in ['x86', 'arm']:
             if iwc and dwc:
                 self.itb_walker_cache = iwc
