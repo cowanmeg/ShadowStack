@@ -77,6 +77,7 @@ ReturnAddrStack::push(const TheISA::PCState &return_addr)
        addrStack[tos].count++;
        DPRINTF(Ras, "RAS pushed same value %s, incremented count to %d\n", return_addr, addrStack[tos].count);
     } else {
+	checkOverflow();
         incrTos();
         addrStack[tos] = RASEntry{return_addr, 1};
         if (usedEntries != numEntries) {
@@ -87,7 +88,7 @@ ReturnAddrStack::push(const TheISA::PCState &return_addr)
     }
     DPRINTF(Ras, "RAS pushed %s bos=%d, tos=%d, usedEntries=%d\n", return_addr, bos, tos, usedEntries);
     
-    checkOverflow();
+    //checkOverflow();
 
 }
 
