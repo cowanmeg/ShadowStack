@@ -11,8 +11,8 @@ s(),
 i(0),
 j(0)
 {   
-    uint8_t l =7;
-    genKey(l);
+    printf("rc4 called\n");
+    genKey();
 }
 uint8_t RC4::encryptByte(uint8_t in)
 {   
@@ -53,11 +53,15 @@ uint64_t RC4::encrypt64(uint64_t in){
    uint64_t temp = in;
    uint64_t res = 0;
    uint8_t t =0xff;
-
-    for(int i =0; i < 8; i++){
+   uint8_t total =0;
+   for(int i = 0; i < keyLength ;i++){
+     total+= key[i];
+   } 
+   for(int i =0; i < 8; i++){
         uint8_t p = temp & t;
 	uint8_t q = encryptByte(p);
         res |= q;
+       // printf("En/De %lx : step %d, before en/de = %d, after en/de = %d, key during en/de = %d, keylength during en/de = %d\n", in, i, p, q,total,keyLength);
         if(i<7){
            temp >>= 8;
            res  <<= 8;
@@ -65,17 +69,12 @@ uint64_t RC4::encrypt64(uint64_t in){
     }
    return res;
 }
-uint64_t RC4::decrypt64(uint64_t t){
-   return encrypt64(t);    
-}
+//uint64_t RC4::decrypt64(uint64_t &t){
+  // return encrypt64(t);    
+//}
 
-void RC4::genKey(uint8_t tkeyLength){
-    
-    uint8_t tkey[tkeyLength];
-    for(int i =0; i<tkeyLength ; i++){
-
-        tkey[i]  = rand()%256;
+void RC4::genKey(){ 
+    for(int i = 0; i< keyLength ; i++){
+        key[i]  = rand()%256;
     }
-    this->keyLength = tkeyLength;
-    this->key = tkey;
 }

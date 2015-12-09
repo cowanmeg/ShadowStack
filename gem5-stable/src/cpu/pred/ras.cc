@@ -157,6 +157,7 @@ ReturnAddrStack::checkOverflow() {
       RASEntry entry = addrStack[bos+1];
       TheISA::PCState address=entry.addr;
       uint64_t encryptedAddr=rc.encrypt64(address.pc());
+      //printf("checkOverflow: before encrypted = %lx after encrypted = %lx\n",address.pc(),encryptedAddr);
       entry.addr.pc(encryptedAddr);
       //std::cout << "size: " << sizeof(entry) << std::endl;
       uint8_t *data = new uint8_t[PCSTATE_SIZE];
@@ -187,8 +188,8 @@ void
 ReturnAddrStack::restoreAddr(const RASEntry &return_addr) {
   if (overflowEntries > 0) {
     RASEntry return_address = (RASEntry) return_addr;
-    TheISA::PCState address = return_address.addr;
     uint64_t decryptedAddr = rc.encrypt64(address.pc());
+  //  printf("restoreAddr: before decrypted = %lx after decrypted = %lx\n",address.pc(),decryptedAddr);   
     return_address.addr.pc(decryptedAddr);
     addrStack[bos] = return_address;
     decrBos();
