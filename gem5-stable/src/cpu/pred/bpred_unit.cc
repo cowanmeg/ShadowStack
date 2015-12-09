@@ -514,8 +514,9 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
             ++RASIncorrect;
             // meghan: Incorrect RAS address Security attack?
             // some weird error where gem5 is setting corrTarget to 0x34=>0x38 or 0x50=>0x54
-            if (corrTarget.pc() != 0x34 and corrTarget.pc() != 0x50) {
-                DPRINTF(Ras, "RAS Incorrect! RAS Index %d predicted %s actual %s\n", (*hist_it).RASIndex, (*hist_it).RASTarget.addr, corrTarget);
+            if (corrTarget.pc() != 0x34 and corrTarget.pc() != 0x50 and corrTarget.pc() != 0x2c) {
+                DPRINTF(Ras, "RAS Incorrect! RAS Index %d predicted caller %s actual target %s\n",
+                 (*hist_it).RASIndex, (*hist_it).RASTarget.addr, corrTarget);
                 if (hist_it->usedBTB)
 		            DPRINTF(Ras, "From an indirect call\n");
                 RAS[tid].print();

@@ -125,6 +125,18 @@ class L2XBar(CoherentXBar):
     response_latency = 1
     snoop_response_latency = 1
 
+# Meghan
+class L1XBar(CoherentXBar):
+    # 256-bit crossbar by default
+    width = 32
+
+    # Assume that most of this is covered by the cache latencies, with
+    # no more than a single pipeline stage for any packet.
+    frontend_latency = 1
+    forward_latency = 0
+    response_latency = 1
+    snoop_response_latency = 1
+
 # One of the key coherent crossbar instances is the system
 # interconnect, tying together the CPU clusters, GPUs, and any I/O
 # coherent masters, and DRAM controllers.

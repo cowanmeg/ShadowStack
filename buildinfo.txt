@@ -6,3 +6,30 @@ Running a binary
 
 Compiling a binary statically - no optimizations no stack smashing protection
 gcc loop.c -std=c99 -fno-stack-protector -static -o0 -o loop
+
+
+
+
+
+
+
+
+
+
+
+
+
+Running benchmarks
+
+1. anagram
+
+2. cc1
+
+3. compress95
+
+4. go
+
+5. perl
+
+
+build/ALPHA/gem5.opt --debug-file=out.txt --debug-flags=Ras configs/example/se.py -c tests/test-progs/hello/bin/alpha/linux/hello --caches --l2cache --cpu-type=detailed
