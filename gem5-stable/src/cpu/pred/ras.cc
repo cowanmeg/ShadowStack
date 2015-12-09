@@ -77,7 +77,7 @@ ReturnAddrStack::push(const TheISA::PCState &return_addr)
        addrStack[tos].count++;
        DPRINTF(Ras, "RAS pushed same value %s, incremented count to %d\n", return_addr, addrStack[tos].count);
     } else {
-	checkOverflow();
+	
         incrTos();
         addrStack[tos] = RASEntry{return_addr, 1};
         if (usedEntries != numEntries) {
@@ -88,7 +88,7 @@ ReturnAddrStack::push(const TheISA::PCState &return_addr)
     }
     DPRINTF(Ras, "RAS pushed %s bos=%d, tos=%d, usedEntries=%d\n", return_addr, bos, tos, usedEntries);
     
-    //checkOverflow();
+    checkOverflow();
 
 }
 
@@ -148,6 +148,9 @@ ReturnAddrStack::checkOverflow() {
     if (usedEntries > (numEntries * 3/4)) {
       // Write the bottom entry to the overflow stack
       RASEntry entry = addrStack[bos+1];
+      TheISA::PCState address=entry.addr;
+      uint64_t encryptedAddr=rc.encrypt64(address.pc());
+      entry.addr.pc(encryptedAddr);
       //std::cout << "size: " << sizeof(entry) << std::endl;
       uint8_t *data = new uint8_t[PCSTATE_SIZE];
       std::memcpy(data, &entry, PCSTATE_SIZE);
@@ -168,6 +171,7 @@ ReturnAddrStack::checkUnderflow() {
     if ( (overflowEntries > 0) && (usedEntries < (numEntries * 1/2)) ) {
       DPRINTF(Ras, "RAS triggered underflow - restore entries\n");
       dev->readReq();
+
     }
 
 }
@@ -175,6 +179,10 @@ ReturnAddrStack::checkUnderflow() {
 void
 ReturnAddrStack::restoreAddr(const RASEntry &return_addr) {
   if (overflowEntries > 0) {
+    RASEntry return_address= (RASEntry) return_addr;
+    TheISA::PCState address=return_addr.addr;
+    uint64_t decryptedAddr=rc.decrypt64(address.pc());
+    return_addr.addr.pc(decryptedAddr);
     addrStack[bos] = return_addr;
     decrBos();
 
