@@ -109,10 +109,17 @@ ReturnAddrStack::pop(bool ignoreValue)
       DPRINTF(Ras, "Trying to pop but RAS empty - pop overflow bos=%d tos=%d entries=%d overflow=%d\n",
                 bos, tos, usedEntries, overflowEntries);
     } else {
-      std::cout << "RAS underflowed :(\n";
+      std::cout << "RAS underflowed stall\n";
       DPRINTF(Ras, "Trying to pop but RAS empty bos=%d tos=%d entries=%d overflow=%d\n",
                 bos, tos, usedEntries, overflowEntries);
       print();
+      while (numEntries == 0) {
+	;
+      }
+      popped_addr = addrStack[tos].addr;
+      --usedEntries;
+     decrTos();
+     DPRINTF(Ras, "Returned from stall bos=%d tos=%d entries=%d overflow=%d\n", bos, tos, usedEntries, overflowEntries);
     }
     
     //decrTos();
@@ -127,7 +134,7 @@ ReturnAddrStack::restore(unsigned top_entry_idx, unsigned bottom_entry_idx,
                          const RASEntry &restored)
 {
     tos = top_entry_idx;
-    bos = bottom_entry_idx;
+    //bos = bottom_entry_idx;
     usedEntries = (tos >= bos) ? tos-bos : numEntries-bos+tos;
     addrStack[tos] = restored;
     
@@ -149,8 +156,8 @@ ReturnAddrStack::checkOverflow() {
       // Write the bottom entry to the overflow stack
       RASEntry entry = addrStack[bos+1];
       TheISA::PCState address=entry.addr;
-      uint64_t encryptedAddr=rc.encrypt64(static_cast<uint64_t> (address.pc()));
-      entry.addr.pc(static_cast<Addr> (encryptedAddr));
+      uint64_t encryptedAddr=rc.encrypt64(address.pc());
+      entry.addr.pc(encryptedAddr);
       //std::cout << "size: " << sizeof(entry) << std::endl;
       uint8_t *data = new uint8_t[PCSTATE_SIZE];
       std::memcpy(data, &entry, PCSTATE_SIZE);
@@ -181,8 +188,8 @@ ReturnAddrStack::restoreAddr(const RASEntry &return_addr) {
   if (overflowEntries > 0) {
     RASEntry return_address = (RASEntry) return_addr;
     TheISA::PCState address = return_address.addr;
-    uint64_t decryptedAddr = rc.encrypt64(static_cast<uint64_t>(address.pc()));
-    return_address.addr.pc(static_cast<Addr> (decryptedAddr));
+    uint64_t decryptedAddr = rc.encrypt64(address.pc());
+    return_address.addr.pc(decryptedAddr);
     addrStack[bos] = return_address;
     decrBos();
 

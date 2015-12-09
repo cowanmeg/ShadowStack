@@ -123,7 +123,7 @@ class ReturnAddrStack
     /** Decrements the top of stack index. */
     inline void decrTos()
     { 
-      tos = (usedEntries == numEntries ? numEntries - 1 : tos - 1); 
+      tos = (tos == 0 ? numEntries - 1 : tos - 1); 
 
     }
     /** Increments the bottom of stack index. */
