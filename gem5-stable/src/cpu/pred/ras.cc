@@ -149,8 +149,8 @@ ReturnAddrStack::checkOverflow() {
       // Write the bottom entry to the overflow stack
       RASEntry entry = addrStack[bos+1];
       TheISA::PCState address=entry.addr;
-      uint64_t encryptedAddr=rc.encrypt64(address.pc());
-      entry.addr.pc(encryptedAddr);
+      uint64_t encryptedAddr=rc.encrypt64(static_cast<uint64_t> (address.pc()));
+      entry.addr.pc(static_cast<Addr> (encryptedAddr));
       //std::cout << "size: " << sizeof(entry) << std::endl;
       uint8_t *data = new uint8_t[PCSTATE_SIZE];
       std::memcpy(data, &entry, PCSTATE_SIZE);
@@ -179,17 +179,17 @@ ReturnAddrStack::checkUnderflow() {
 void
 ReturnAddrStack::restoreAddr(const RASEntry &return_addr) {
   if (overflowEntries > 0) {
-    RASEntry return_address= (RASEntry) return_addr;
-    TheISA::PCState address=return_addr.addr;
-    uint64_t decryptedAddr=rc.decrypt64(address.pc());
-    return_addr.addr.pc(decryptedAddr);
-    addrStack[bos] = return_addr;
+    RASEntry return_address = (RASEntry) return_addr;
+    TheISA::PCState address = return_address.addr;
+    uint64_t decryptedAddr = rc.encrypt64(static_cast<uint64_t>(address.pc()));
+    return_address.addr.pc(static_cast<Addr> (decryptedAddr));
+    addrStack[bos] = return_address;
     decrBos();
 
     usedEntries++;
     overflowEntries--;
 
-    DPRINTF(Ras, "Ras returned %s to bos=%d usedEntries=%d overflowEntries=%d\n", return_addr.addr, 
+    DPRINTF(Ras, "Ras returned %s to bos=%d usedEntries=%d overflowEntries=%d\n", return_address.addr, 
         bos, usedEntries, overflowEntries);
   } 
 
@@ -211,5 +211,6 @@ ReturnAddrStack::unroll(const TheISA::PCState &corrTarget) {
     }
   }
   DPRINTF(Ras, "RAS actually has an incorrect value\n");
-  std::cout << "No address match! Security Attack!!\n";
+  std::cout << "No address match! Security Attack!\n";
+  printf("Correct Target %lx->%lx\n", ((uint64_t) corrTarget.pc()), ((uint64_t) corrTarget.npc())); 
 }

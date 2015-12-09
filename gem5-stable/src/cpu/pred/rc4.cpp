@@ -49,7 +49,7 @@ uint8_t RC4::decryptByte(uint8_t in)
     return encryptByte(in);
 }
 
-uint64_t RC4::encrypt64(uint64_t &in){
+uint64_t RC4::encrypt64(uint64_t in){
    uint64_t temp = in;
    uint64_t res = 0;
    uint8_t t =0xff;
@@ -65,7 +65,7 @@ uint64_t RC4::encrypt64(uint64_t &in){
     }
    return res;
 }
-uint64_t RC4::decrypt64(uint64_t &t){
+uint64_t RC4::decrypt64(uint64_t t){
    return encrypt64(t);    
 }
 

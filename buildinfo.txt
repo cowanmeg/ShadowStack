@@ -21,13 +21,23 @@ gcc loop.c -std=c99 -fno-stack-protector -static -o0 -o loop
 
 Running benchmarks
 
-1. anagram
+1. anagram - works!
+
+build/ALPHA/gem5.opt configs/example/se.py --stats-file=anagram_stats.txt --input=../benchmarks/anagram.in -c ../benchmarks/anagram.alpha --caches --l2cache --cpu-type=detailed -o ../benchmarks/words
 
 2. cc1
 
+build/ALPHA/gem5.opt configs/example/se.py --stats-file=cc1_stats.txt --input=../benchmarks/anagram.in -c ../benchmarks/anagram.alpha --caches --l2cache --cpu-type=detailed -o ../benchmarks/words
+
+
 3. compress95
 
-4. go
+Doesn't run :(
+
+4. go - Mismatched address :(
+
+build/ALPHA/gem5.opt --stats-file=go_stats.txt configs/example/se.py -c ../benchmarks/go.alpha --caches --l2cache --cpu-type=detailed -o "50 9 /home/cowanmeg/Documents/ShadowStack/benchmarks/2stone9.in"
+
 
 5. perl
 
