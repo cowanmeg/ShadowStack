@@ -64,8 +64,6 @@ BPredUnit::BPredUnit(const Params *params)
       RAS(numThreads),
       instShiftAmt(params->instShiftAmt)
 {
-    calls = 0;
-    returns = 0;
     for (auto& r : RAS)
         r.init(params->RASSize);
 }
@@ -75,6 +73,14 @@ BPredUnit::assignPort(TestMemDevice *_dev) {
     dev = _dev; 
     for (auto& r : RAS)
         r.assignPort(dev);
+}
+
+void
+BPredUnit::assignTC(std::vector<ThreadContext*> *tc) {
+   int i = 0;
+   for (auto&r : RAS)
+      r.assignTC(tc->at(i));
+      i++;
 }
 
 void
@@ -88,7 +94,7 @@ BPredUnit::regStats()
     condPredicted
         .name(name() + ".condPredicted")
         .desc("Number of conditional branches predicted")
-        ;
+         ;
 
     condIncorrect
         .name(name() + ".condIncorrect")
@@ -155,13 +161,14 @@ BPredUnit::drainSanityCheck() const
 
 bool
 BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
-                   TheISA::PCState &pc, ThreadID tid)
+                   TheISA::PCState &pc, ThreadID tid, bool *stall)
 {
     // See if branch predictor predicts taken.
     // If so, get its target addr either from the BTB or the RAS.
     // Save off record of branch stuff so the RAS can be fixed
     // up once it's done.
 
+    *stall = false;
     bool pred_taken = false;
     TheISA::PCState target = pc;
 
@@ -221,7 +228,9 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
             predict_record.RASTarget = rasTop;
             predict_record.RASBos = RAS[tid].bottomIdx();
 
-            RAS[tid].pop();
+            if (!RAS[tid].pop()) {
+                *stall = true;
+            }
             predict_record.usedBTB = true; // RAS return is speculative
             
             DPRINTF(Ras, "[tid:%i]: Instruction %s is a return, "
@@ -517,10 +526,12 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
             if (corrTarget.pc() != 0x34 and corrTarget.pc() != 0x50 and corrTarget.pc() != 0x2c) {
                 DPRINTF(Ras, "RAS Incorrect! RAS Index %d predicted caller %s actual target %s\n",
                  (*hist_it).RASIndex, (*hist_it).RASTarget.addr, corrTarget);
-                if (hist_it->usedBTB)
-		            DPRINTF(Ras, "From an indirect call\n");
                 RAS[tid].print();
-                RAS[tid].unroll(corrTarget);
+                if (!RAS[tid].unroll(corrTarget)) {
+                    DPRINTF(Ras, "RAS actually incorrect!\n");
+                    printf("RAS incorrect! Predicted Caller %lx->%lx, Actual Target %lx->%lx\n", 
+                      (*hist_it).RASTarget.addr.pc(), (*hist_it).RASTarget.addr.npc(), corrTarget.pc(), corrTarget.npc());
+                }
             }
         }
 

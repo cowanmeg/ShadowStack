@@ -74,6 +74,7 @@ class BPredUnit : public SimObject
      */
     BPredUnit(const Params *p);
     void assignPort(TestMemDevice *_dev);
+    void assignTC(std::vector<ThreadContext*> *tc);
     TestMemDevice *dev;
 
     /**
@@ -95,7 +96,7 @@ class BPredUnit : public SimObject
      * @return Returns if the branch is taken or not.
      */
     bool predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
-                 TheISA::PCState &pc, ThreadID tid);
+                 TheISA::PCState &pc, ThreadID tid, bool *stall);
     bool predictInOrder(const StaticInstPtr &inst, const InstSeqNum &seqNum,
                         int asid, TheISA::PCState &instPC,
                         TheISA::PCState &predPC, ThreadID tid);
@@ -209,10 +210,6 @@ class BPredUnit : public SimObject
     void dump();
 
   private:
-    //debug Meghan
-    int calls;
-    int returns;
-
     struct PredictorHistory {
         /**
          * Makes a predictor history struct that contains any

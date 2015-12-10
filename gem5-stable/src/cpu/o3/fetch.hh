@@ -221,7 +221,7 @@ class DefaultFetch
     void setFetchQueue(TimeBuffer<FetchStruct> *fq_ptr);
 
     /** Initialize stage. */
-    void startupStage();
+    void startupStage(std::vector<ThreadContext*> *tc);
 
     /** Handles retrying the fetch access. */
     void recvReqRetry();
@@ -258,6 +258,7 @@ class DefaultFetch
     /** For priority-based fetch policies, need to keep update priorityList */
     void deactivateThread(ThreadID tid);
   private:
+    std::vector<ThreadContext*> *threadContexts;
     /** Reset this pipeline stage */
     void resetStage();
 
@@ -280,7 +281,7 @@ class DefaultFetch
      * @param next_NPC Used for ISAs which use delay slots.
      * @return Whether or not a branch was predicted as taken.
      */
-    bool lookupAndUpdateNextPC(DynInstPtr &inst, TheISA::PCState &pc);
+    bool lookupAndUpdateNextPC(DynInstPtr &inst, TheISA::PCState &pc, bool *stall);
 
     /**
      * Fetches the cache line that contains the fetch PC.  Returns any

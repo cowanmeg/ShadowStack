@@ -452,8 +452,9 @@ BaseSimpleCPU::preExecute()
         const InstSeqNum cur_sn(0);
         const ThreadID tid(0);
         pred_pc = thread->pcState();
+        bool stall = false;
         const bool predict_taken(
-            branchPred->predict(curStaticInst, cur_sn, pred_pc, tid));
+            branchPred->predict(curStaticInst, cur_sn, pred_pc, tid, &stall));
 
         if (predict_taken)
             ++numPredictedBranches;

@@ -40,6 +40,7 @@
 #include "rc4.h"
 #include "base/types.hh"
 #include "debug/Ras.hh"
+#include "cpu/thread_context.hh"
 
 #define PCSTATE_SIZE 24
 
@@ -65,6 +66,7 @@ class ReturnAddrStack
 
     /* Initializes RAS with TestMemDevice used for overflow */
     void assignPort(TestMemDevice *dev);
+    void assignTC(ThreadContext *_tc) {tc = _tc;}
 
     void reset();
 
@@ -84,7 +86,7 @@ class ReturnAddrStack
     void push(const TheISA::PCState &return_addr);
 
     /** Pops the top address from the RAS. */
-    void pop(bool ignoreValue=false);
+    bool pop(bool ignoreValue=false);
 
     /** Changes index to the top of the RAS, and replaces the top address with
      *  a new target.
@@ -93,20 +95,16 @@ class ReturnAddrStack
      */
     void restore(unsigned top_entry_idx, unsigned bottom_entry_idx, const RASEntry &restored);
 
-    /* Checks if the corrTarget is located deeper in the RAS - necessary for setjmp and longjmp */
-    void unroll(const TheISA::PCState &corrTarget);
+    /* Checks if the corrTarget is located deeper in the RAS - necessary for setjmp and longjmp 
+       returns if a match was found*/
+    bool unroll(const TheISA::PCState &corrTarget);
 
     bool empty() { return usedEntries == 0; }
 
     bool full() { return usedEntries == numEntries; }
 
-    /** Checks if the RAS is about to underflow and if so sends a request
-    to restore entries */
-    void checkUnderflow();
-
-    /** Checks if the RAS is about to overflow and if so sends out to 
-    bottom most address to the overflow stack*/
-    void checkOverflow();
+    /** Checks if the RAS is about to underflow or underflow */
+    void checkOverflowStack();
 
     /** Writes back a return address returned from overflow stack
     back into the RAS*/
@@ -153,10 +151,12 @@ class ReturnAddrStack
     unsigned tos;
     /** The bottom of stack index. */
     unsigned bos;
-
+    
+    bool stalled;
     /** Pointer to device that handles overflow stack*/
     TestMemDevice *dev;
     RC4 rc;
+    ThreadContext *tc;
 };
 
 #endif // __CPU_PRED_RAS_HH__

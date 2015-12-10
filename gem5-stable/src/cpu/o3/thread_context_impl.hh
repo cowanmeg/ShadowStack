@@ -89,8 +89,11 @@ O3ThreadContext<Impl>::activate()
     DPRINTF(O3CPU, "Calling activate on Thread Context %d\n",
             threadId());
 
-    if (thread->status() == ThreadContext::Active)
+    if (thread->status() == ThreadContext::Active) {
+        DPRINTF(O3CPU, "Already active - try waking fetch %d\n");
+        cpu->activateContext(thread->threadId());
         return;
+    }
 
     thread->lastActivate = curTick();
     thread->setStatus(ThreadContext::Active);

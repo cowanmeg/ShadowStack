@@ -1349,6 +1349,11 @@ DefaultCommit<Impl>::markCompletedInsts()
 
             // Mark the instruction as ready to commit.
             fromIEW->insts[inst_num]->setCanCommit();
+        } else {
+          DPRINTF(Commit, "[tid:%i]: Passed Marking PC %s, [sn:%lli] ready "
+                    "within ROB.\n",fromIEW->insts[inst_num]->threadNumber,
+                    fromIEW->insts[inst_num]->pcState(),
+                    fromIEW->insts[inst_num]->seqNum);
         }
     }
 }

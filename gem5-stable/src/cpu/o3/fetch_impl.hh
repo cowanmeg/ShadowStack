@@ -325,7 +325,7 @@ DefaultFetch<Impl>::setFetchQueue(TimeBuffer<FetchStruct> *ftb_ptr)
 
 template<class Impl>
 void
-DefaultFetch<Impl>::startupStage()
+DefaultFetch<Impl>::startupStage(std::vector<ThreadContext*> *tc)
 {
     assert(priorityList.empty());
     resetStage();
@@ -333,6 +333,8 @@ DefaultFetch<Impl>::startupStage()
     // Fetch needs to start fetching instructions at the very beginning,
     // so it must start up in active state.
     switchToActive();
+    threadContexts = tc;
+    branchPred->assignTC(tc);
 }
 
 template<class Impl>
@@ -542,7 +544,7 @@ DefaultFetch<Impl>::deactivateThread(ThreadID tid)
 template <class Impl>
 bool
 DefaultFetch<Impl>::lookupAndUpdateNextPC(
-        DynInstPtr &inst, TheISA::PCState &nextPC)
+        DynInstPtr &inst, TheISA::PCState &nextPC, bool *stall)
 {
     // Do branch prediction check here.
     // A bit of a misnomer...next_PC is actually the current PC until
@@ -557,12 +559,18 @@ DefaultFetch<Impl>::lookupAndUpdateNextPC(
     }
 
     ThreadID tid = inst->threadNumber;
+
     predict_taken = branchPred->predict(inst->staticInst, inst->seqNum,
-                                        nextPC, tid);
+                                        nextPC, tid, stall);
 
     if (predict_taken) {
         DPRINTF(Fetch, "[tid:%i]: [sn:%i]:  Branch predicted to be taken to %s.\n",
                 tid, inst->seqNum, nextPC);
+
+        if (stall) {
+            DPRINTF(Fetch, "RAS almost empty - stall\n");
+
+        }
     } else {
         DPRINTF(Fetch, "[tid:%i]: [sn:%i]:Branch predicted to be not taken.\n",
                 tid, inst->seqNum);
@@ -1237,6 +1245,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
 
     // Need to halt fetch if quiesce instruction detected
     bool quiesce = false;
+    bool stall = false;
 
     TheISA::MachInst *cacheInsts =
         reinterpret_cast<TheISA::MachInst *>(fetchBuffer[tid]);
@@ -1345,7 +1354,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
             // from the same block.
             predictedBranch |= thisPC.branching();
             predictedBranch |=
-                lookupAndUpdateNextPC(instruction, nextPC);
+                lookupAndUpdateNextPC(instruction, nextPC, &stall);
             if (predictedBranch) {
                 DPRINTF(Fetch, "Branch detected with PC = %s\n", thisPC);
             }
@@ -1363,7 +1372,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
                 curMacroop = NULL;
             }
 
-            if (instruction->isQuiesce()) {
+            if (instruction->isQuiesce() || stall) {
                 DPRINTF(Fetch,
                         "Quiesce instruction encountered, halting fetch!\n");
                 fetchStatus[tid] = QuiescePending;

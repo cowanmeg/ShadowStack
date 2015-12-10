@@ -589,7 +589,7 @@ FullO3CPU<Impl>::tick()
     if (!FullSystem)
         updateThreadPriority();
 
-    tryDrain();
+    //drain();
 }
 
 template <class Impl>
@@ -628,7 +628,7 @@ FullO3CPU<Impl>::startup()
     for (int tid = 0; tid < numThreads; ++tid)
         isa[tid]->startup(threadContexts[tid]);
 
-    fetch.startupStage();
+    fetch.startupStage(&threadContexts);
     decode.startupStage();
     iew.startupStage();
     rename.startupStage();
@@ -651,6 +651,7 @@ FullO3CPU<Impl>::activateThread(ThreadID tid)
 
         activeThreads.push_back(tid);
     }
+
 }
 
 template <class Impl>
@@ -671,7 +672,7 @@ FullO3CPU<Impl>::deactivateThread(ThreadID tid)
     }
 
     fetch.deactivateThread(tid);
-    commit.deactivateThread(tid);
+    //commit.deactivateThread(tid);
 }
 
 template <class Impl>
@@ -713,7 +714,10 @@ FullO3CPU<Impl>::activateContext(ThreadID tid)
     // we just want to flag the thread as active and schedule the tick
     // event from drainResume() instead.
     if (getDrainState() == Drainable::Drained)
-        return;
+        std::cout << "Avoiding drain\n";
+        //return;
+
+    DPRINTF(O3CPU, "Activate threadcontext\n");
 
     // If we are time 0 or if the last activation time is in the past,
     // schedule the next tick and wake up the fetch unit
@@ -734,7 +738,7 @@ FullO3CPU<Impl>::activateContext(ThreadID tid)
         lastActivatedCycle = curTick();
 
         _status = Running;
-    }
+    } 
 }
 
 template <class Impl>

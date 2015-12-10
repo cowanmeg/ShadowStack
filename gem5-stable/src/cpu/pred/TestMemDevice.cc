@@ -85,7 +85,7 @@ TestMemDevice::readReq() {
 
 void 
 TestMemDevice::resetAddr(unsigned numEntries) {
-	overflowPaddr = STARTADDR + PCSTATE_SIZE * numEntries;
+	overflowPaddr = STARTADDR + PCSTATE_SIZE * 8 * numEntries;
 }
 
 TestMemDevice*
