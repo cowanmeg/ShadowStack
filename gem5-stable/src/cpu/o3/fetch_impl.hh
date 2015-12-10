@@ -1245,7 +1245,6 @@ DefaultFetch<Impl>::fetch(bool &status_change)
 
     // Need to halt fetch if quiesce instruction detected
     bool quiesce = false;
-    bool stall = false;
 
     TheISA::MachInst *cacheInsts =
         reinterpret_cast<TheISA::MachInst *>(fetchBuffer[tid]);
@@ -1352,6 +1351,7 @@ DefaultFetch<Impl>::fetch(bool &status_change)
 
             // If we're branching after this instruction, quit fetching
             // from the same block.
+            bool stall = false;
             predictedBranch |= thisPC.branching();
             predictedBranch |=
                 lookupAndUpdateNextPC(instruction, nextPC, &stall);

@@ -6628,3 +6628,448 @@ L1175:
 L1173:
 	ret
 	restore
+	.align 4
+	.global _expand_function_start
+	.proc	020
+_expand_function_start:
+	!#PROLOGUE# 0
+	save %sp,-112,%sp
+	!#PROLOGUE# 1
+	sethi %hi(_this_function),%o0
+	st %i0,[%o0+%lo(_this_function)]
+	sethi %hi(_optimize),%o0
+	ld [%o0+%lo(_optimize)],%o0
+	subcc %g0,%o0,%g0
+	subx %g0,-1,%o0
+	sethi %hi(_cse_not_expected),%o1
+	st %o0,[%o1+%lo(_cse_not_expected)]
+	sethi %hi(_flag_omit_frame_pointer),%o0
+	ld [%o0+%lo(_flag_omit_frame_pointer)],%o0
+	subcc %g0,%o0,%g0
+	subx %g0,-1,%o0
+	sethi %hi(_frame_pointer_needed),%o1
+	st %o0,[%o1+%lo(_frame_pointer_needed)]
+	sethi %hi(_goto_fixup_chain),%o0
+	st %g0,[%o0+%lo(_goto_fixup_chain)]
+	sethi %hi(_stack_slot_list),%o0
+	st %g0,[%o0+%lo(_stack_slot_list)]
+	sethi %hi(_invalid_stack_slot),%o0
+	st %g0,[%o0+%lo(_invalid_stack_slot)]
+	sethi %hi(_write_symbols),%o0
+	call _init_emit,0
+	ld [%o0+%lo(_write_symbols)],%o0
+	call _init_expr,0
+	mov 0,%l0
+	call _init_const_rtx_hash_table,0
+	nop
+	sethi %hi(_current_function_pops_args),%o0
+	or %o0,%lo(_current_function_pops_args),%l1
+	sethi %hi(_target_flags),%o0
+	ld [%o0+%lo(_target_flags)],%o0
+	andcc %o0,8,%g0
+	be,a L1201
+	st %l0,[%l1]
+	ld [%i0+8],%o1
+	ldub [%o1+12],%o0
+	cmp %o0,1
+	be,a L1201
+	st %l0,[%l1]
+	ld [%o1+16],%o0
+	cmp %o0,0
+	be,a L1180
+	mov 1,%l0
+	call _tree_last,0
+	nop
+	sethi %hi(_void_type_node),%o1
+	ld [%o0+20],%o2
+	ld [%o1+%lo(_void_type_node)],%o0
+	cmp %o2,%o0
+	bne,a L1201
+	st %l0,[%l1]
+	mov 1,%l0
+L1180:
+	st %l0,[%l1]
+L1201:
+	ld [%i0+36],%o0
+	ld [%o0+20],%o0
+	sethi %hi(_current_function_name),%o1
+	st %o0,[%o1+%lo(_current_function_name)]
+	sethi %hi(_current_function_needs_context),%o0
+	or %o0,%lo(_current_function_needs_context),%o2
+	sethi %hi(_current_function_decl),%o0
+	ld [%o0+%lo(_current_function_decl)],%o0
+	ld [%o0+40],%o0
+	cmp %o0,0
+	be L1182
+	mov 0,%o1
+	ldub [%o0+12],%o0
+	xor %o0,28,%o0
+	subcc %g0,%o0,%g0
+	subx %g0,-1,%o1
+L1182:
+	st %o1,[%o2]
+	sethi %hi(_current_function_calls_setjmp),%o0
+	st %g0,[%o0+%lo(_current_function_calls_setjmp)]
+	sethi %hi(_current_function_returns_pcc_struct),%o0
+	st %g0,[%o0+%lo(_current_function_returns_pcc_struct)]
+	sethi %hi(_current_function_returns_struct),%o0
+	st %g0,[%o0+%lo(_current_function_returns_struct)]
+	sethi %hi(_max_structure_value_size),%o0
+	st %g0,[%o0+%lo(_max_structure_value_size)]
+	sethi %hi(_structure_value),%o0
+	st %g0,[%o0+%lo(_structure_value)]
+	sethi %hi(_block_stack),%o0
+	st %g0,[%o0+%lo(_block_stack)]
+	sethi %hi(_loop_stack),%o0
+	st %g0,[%o0+%lo(_loop_stack)]
+	sethi %hi(_case_stack),%o0
+	st %g0,[%o0+%lo(_case_stack)]
+	sethi %hi(_cond_stack),%o0
+	st %g0,[%o0+%lo(_cond_stack)]
+	sethi %hi(_nesting_stack),%o0
+	st %g0,[%o0+%lo(_nesting_stack)]
+	sethi %hi(_nesting_depth),%o0
+	st %g0,[%o0+%lo(_nesting_depth)]
+	sethi %hi(_tail_recursion_label),%o0
+	st %g0,[%o0+%lo(_tail_recursion_label)]
+	sethi %hi(_frame_offset),%o0
+	st %g0,[%o0+%lo(_frame_offset)]
+	sethi %hi(_save_expr_regs),%o0
+	st %g0,[%o0+%lo(_save_expr_regs)]
+	sethi %hi(_rtl_expr_chain),%o0
+	st %g0,[%o0+%lo(_rtl_expr_chain)]
+	sethi %hi(_immediate_size_expand),%o1
+	ld [%o1+%lo(_immediate_size_expand)],%o0
+	add %o0,1,%o0
+	call _init_pending_stack_adjust,0
+	st %o0,[%o1+%lo(_immediate_size_expand)]
+	call _clear_current_args_size,0
+	nop
+	sethi %hi(_current_function_pretend_args_size),%o0
+	st %g0,[%o0+%lo(_current_function_pretend_args_size)]
+	ld [%i0+16],%o0
+	call _emit_line_note,0
+	ld [%i0+20],%o1
+	mov 0,%o0
+	call _emit_note,0
+	mov -1,%o1
+	call _assign_parms,0
+	mov %i0,%o0
+	ld [%i0+56],%o1
+	ld [%o1+28],%o0
+	cmp %o0,26
+	be L1184
+	sethi %hi(_flag_pcc_struct_return),%o0
+	ld [%o0+%lo(_flag_pcc_struct_return)],%o0
+	cmp %o0,0
+	be,a L1202
+	ld [%i0+56],%o0
+	ld [%o1+8],%o0
+	ldub [%o0+12],%o0
+	add %o0,-19,%o0
+	and %o0,0xff,%o0
+	cmp %o0,1
+	bgu,a L1202
+	ld [%i0+56],%o0
+L1184:
+	sethi %hi(_flag_pcc_struct_return),%o0
+	ld [%o0+%lo(_flag_pcc_struct_return)],%o0
+	cmp %o0,0
+	be L1185
+	nop
+	ld [%i0+56],%o0
+	call _int_size_in_bytes,0
+	ld [%o0+8],%o0
+	call _assemble_static_space,0
+	nop
+	mov %o0,%l0
+	mov 1,%o0
+	sethi %hi(_current_function_returns_pcc_struct),%o1
+	b L1186
+	st %o0,[%o1+%lo(_current_function_returns_pcc_struct)]
+L1185:
+	call _gen_reg_rtx,0
+	mov 4,%o0
+	mov %o0,%l0
+	sethi %hi(_struct_value_incoming_rtx),%o1
+	call _emit_move_insn,0
+	ld [%o1+%lo(_struct_value_incoming_rtx)],%o1
+	mov 1,%o0
+	sethi %hi(_current_function_returns_struct),%o1
+	st %o0,[%o1+%lo(_current_function_returns_struct)]
+L1186:
+	ld [%i0+56],%o1
+	mov 37,%o0
+	ld [%o1+28],%o1
+	call _gen_rtx,0
+	mov %l0,%o2
+	b L1203
+	ld [%i0+56],%o1
+L1202:
+	ld [%o0+8],%o1
+	mov 34,%o0
+	ldub [%o1+28],%o1
+	call _gen_rtx,0
+	mov 0,%o2
+	ld [%i0+56],%o1
+L1203:
+	st %o0,[%o1+64]
+	ld [%i0+56],%o0
+	ld [%o0+64],%o1
+	lduh [%o1],%o0
+	cmp %o0,34
+	bne L1189
+	nop
+	ld [%o1],%o0
+	or %o0,2,%o0
+	st %o0,[%o1]
+L1189:
+	call _gen_label_rtx,0
+	nop
+	sethi %hi(_return_label),%o1
+	st %o0,[%o1+%lo(_return_label)]
+	sethi %hi(_obey_regdecls),%o0
+	ld [%o0+%lo(_obey_regdecls)],%o0
+	cmp %o0,0
+	be L1191
+	nop
+	call _get_last_insn,0
+	mov 56,%i0
+	sethi %hi(_parm_birth_insn),%o1
+	st %o0,[%o1+%lo(_parm_birth_insn)]
+	sethi %hi(_max_parm_reg),%o0
+	ld [%o0+%lo(_max_parm_reg)],%o0
+	cmp %i0,%o0
+	bge L1191
+	nop
+	sethi %hi(_regno_reg_rtx),%l1
+	sethi %hi(_max_parm_reg),%l0
+	ld [%l1+%lo(_regno_reg_rtx)],%o0
+L1204:
+	sll %i0,2,%o1
+	call _use_variable,0
+	ld [%o0+%o1],%o0
+	add %i0,1,%i0
+	ld [%l0+%lo(_max_parm_reg)],%o0
+	cmp %i0,%o0
+	bl L1204
+	ld [%l1+%lo(_regno_reg_rtx)],%o0
+L1191:
+	call _get_last_insn,0
+	nop
+	sethi %hi(_tail_recursion_reentry),%o1
+	call _get_pending_sizes,0
+	st %o0,[%o1+%lo(_tail_recursion_reentry)]
+	orcc %o0,%g0,%i0
+	be L1197
+	nop
+	ld [%i0+20],%o0
+L1205:
+	mov 0,%o1
+	mov 0,%o2
+	call _expand_expr,0
+	mov 0,%o3
+	ld [%i0+4],%i0
+	cmp %i0,0
+	bne,a L1205
+	ld [%i0+20],%o0
+L1197:
+	ret
+	restore
+	.align 4
+	.global _expand_function_end
+	.proc	020
+_expand_function_end:
+	!#PROLOGUE# 0
+	save %sp,-112,%sp
+	!#PROLOGUE# 1
+	sethi %hi(_sequence_stack),%o0
+	ld [%o0+%lo(_sequence_stack)],%o0
+	cmp %o0,0
+	be L1224
+	sethi %hi(_immediate_size_expand),%o1
+	sethi %hi(_sequence_stack),%l0
+L1209:
+	call _end_sequence,0
+	mov 0,%o0
+	ld [%l0+%lo(_sequence_stack)],%o0
+	cmp %o0,0
+	bne L1209
+	sethi %hi(_immediate_size_expand),%o1
+L1224:
+	ld [%o1+%lo(_immediate_size_expand)],%o0
+	add %o0,-1,%o0
+	st %o0,[%o1+%lo(_immediate_size_expand)]
+	sethi %hi(_current_function_returns_struct),%o0
+	ld [%o0+%lo(_current_function_returns_struct)],%o0
+	cmp %o0,0
+	be,a L1225
+	sethi %hi(_obey_regdecls),%o0
+	sethi %hi(_current_function_decl),%l0
+	ld [%l0+%lo(_current_function_decl)],%o0
+	ld [%o0+56],%o1
+	ld [%o1+64],%o0
+	ld [%o0+4],%l1
+	call _build_pointer_type,0
+	ld [%o1+8],%o0
+	call _hard_function_value,0
+	ld [%l0+%lo(_current_function_decl)],%o1
+	call _emit_move_insn,0
+	mov %l1,%o1
+	sethi %hi(_obey_regdecls),%o0
+L1225:
+	ld [%o0+%lo(_obey_regdecls)],%o0
+	cmp %o0,0
+	be L1211
+	nop
+	mov 56,%l0
+	sethi %hi(_max_parm_reg),%o0
+	ld [%o0+%lo(_max_parm_reg)],%o0
+	cmp %l0,%o0
+	bge,a L1226
+	sethi %hi(_save_expr_regs),%o0
+	sethi %hi(_regno_reg_rtx),%l2
+	sethi %hi(_max_parm_reg),%l1
+	ld [%l2+%lo(_regno_reg_rtx)],%o0
+L1227:
+	sll %l0,2,%o1
+	call _use_variable,0
+	ld [%o0+%o1],%o0
+	add %l0,1,%l0
+	ld [%l1+%lo(_max_parm_reg)],%o0
+	cmp %l0,%o0
+	bl L1227
+	ld [%l2+%lo(_regno_reg_rtx)],%o0
+	sethi %hi(_save_expr_regs),%o0
+L1226:
+	ld [%o0+%lo(_save_expr_regs)],%l0
+	cmp %l0,0
+	be L1211
+	nop
+	sethi %hi(_parm_birth_insn),%l1
+L1219:
+	call _use_variable,0
+	ld [%l0+4],%o0
+	ld [%l0+4],%o0
+	call _use_variable_after,0
+	ld [%l1+%lo(_parm_birth_insn)],%o1
+	ld [%l0+8],%l0
+	cmp %l0,0
+	bne L1219
+	nop
+L1211:
+	call _clear_pending_stack_adjust,0
+	nop
+	call _do_pending_stack_adjust,0
+	nop
+	mov 0,%o0
+	call _emit_note,0
+	mov -6,%o1
+	mov %i0,%o0
+	call _emit_line_note_force,0
+	mov %i1,%o1
+	sethi %hi(_return_label),%o0
+	call _emit_label,0
+	ld [%o0+%lo(_return_label)],%o0
+	sethi %hi(_current_function_returns_pcc_struct),%o0
+	ld [%o0+%lo(_current_function_returns_pcc_struct)],%o0
+	cmp %o0,0
+	be L1222
+	nop
+	sethi %hi(_current_function_decl),%l0
+	ld [%l0+%lo(_current_function_decl)],%o0
+	ld [%o0+56],%o1
+	ld [%o1+64],%o0
+	ld [%o0+4],%l1
+	call _build_pointer_type,0
+	ld [%o1+8],%o0
+	call _hard_function_value,0
+	ld [%l0+%lo(_current_function_decl)],%o1
+	mov %o0,%l0
+	call _emit_move_insn,0
+	mov %l1,%o1
+	call _use_variable,0
+	mov %l0,%o0
+L1222:
+	call _get_insns,0
+	nop
+	mov %o0,%o3
+	mov 0,%o0
+	mov 0,%o1
+	mov 0,%o2
+	call _fixup_gotos,0
+	mov 0,%o4
+	ret
+	restore
+	.global _current_function_calls_setjmp
+	.common _current_function_calls_setjmp,8,"bss"
+	.global _save_expr_regs
+	.common _save_expr_regs,8,"bss"
+	.global _current_function_pops_args
+	.common _current_function_pops_args,8,"bss"
+	.global _current_function_returns_struct
+	.common _current_function_returns_struct,8,"bss"
+	.global _current_function_returns_pcc_struct
+	.common _current_function_returns_pcc_struct,8,"bss"
+	.global _current_function_needs_context
+	.common _current_function_needs_context,8,"bss"
+	.global _current_function_args_size
+	.common _current_function_args_size,8,"bss"
+	.global _current_function_pretend_args_size
+	.common _current_function_pretend_args_size,8,"bss"
+	.global _current_function_name
+	.common _current_function_name,8,"bss"
+	.global _return_label
+	.common _return_label,8,"bss"
+	.global _stack_slot_list
+	.common _stack_slot_list,8,"bss"
+	.global _emit_filename
+	.common _emit_filename,8,"bss"
+	.global _emit_lineno
+	.common _emit_lineno,8,"bss"
+
+	.reserve _parm_birth_insn,8,"bss"
+
+	.reserve _this_function,8,"bss"
+
+	.reserve _frame_offset,8,"bss"
+
+	.reserve _invalid_stack_slot,8,"bss"
+
+	.reserve _tail_recursion_label,8,"bss"
+
+	.reserve _tail_recursion_reentry,8,"bss"
+
+	.reserve _last_expr_type,8,"bss"
+
+	.reserve _last_expr_value,8,"bss"
+
+	.reserve _rtl_expr_chain,8,"bss"
+
+	.reserve _last_parm_insn,8,"bss"
+	.global _block_stack
+	.common _block_stack,8,"bss"
+	.global _stack_block_stack
+	.common _stack_block_stack,8,"bss"
+	.global _cond_stack
+	.common _cond_stack,8,"bss"
+	.global _loop_stack
+	.common _loop_stack,8,"bss"
+	.global _case_stack
+	.common _case_stack,8,"bss"
+	.global _nesting_stack
+	.common _nesting_stack,8,"bss"
+	.global _nesting_depth
+	.common _nesting_depth,8,"bss"
+
+	.reserve _goto_fixup_chain,8,"bss"
+	.global _expr_stmts_for_value
+	.common _expr_stmts_for_value,8,"bss"
+
+	.reserve _max_parm_reg,8,"bss"
+
+	.reserve _parm_reg_stack_loc,8,"bss"
+
+	.reserve _max_structure_value_size,8,"bss"
+
+	.reserve _structure_value,8,"bss"
