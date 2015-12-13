@@ -2,6 +2,7 @@
 #include "mem/packet.hh"
 #include "mem/request.hh"
 #include "debug/Ras.hh"
+#include "debug/TMD.hh"
 
 #define STARTADDR 512000000
 
@@ -23,6 +24,13 @@ TestMemDevice::getMasterPort(const std::string &if_name, PortID idx) {
 	return MemObject::getMasterPort(if_name, idx);
 }
 
+void 
+TestMemDevice::recvReqRetry() {
+    DPRINTF(TMD, "Received a retry\n");
+    port->sendTimingReq(lastRequest);
+    busy = false;
+}
+
 bool
 TestMemDevice::recvTimingResp(PacketPtr pkt) {
 	// TODO: FIX temp
@@ -30,12 +38,13 @@ TestMemDevice::recvTimingResp(PacketPtr pkt) {
 		ReturnAddrStack::RASEntry data;
 		pkt->writeDataToBlock((uint8_t*) &data, PCSTATE_SIZE);
 
-		DPRINTF(Ras, "Read back data from overflow stack %s count %d\n", data.addr, data.count);
+		DPRINTF(TMD, "Read back data from overflow stack %s count %d\n", data.addr, data.count);
 		RAS->restoreAddr(data);
+		//busy = false;
 	}
 
 	delete pkt;
-	busy = false;
+	
 	return true;
 }
 
@@ -47,21 +56,23 @@ TestMemDevice::isConnected() {
 bool
 TestMemDevice::writeReq(uint8_t *data) { 
 	//create a request packet
-	// TODO incrememnt overflowPaddr
 	if (busy)
 		return false;
 	Request::Flags flags;
-	flags.set(Request::UNCACHEABLE);
+	flags.set(Request::PHYSICAL);
   	Request *req = new Request(overflowPaddr, PCSTATE_SIZE, flags, 0);
 
   	Packet *pkt = new Packet(req, MemCmd::WriteReq);
 	pkt->dataStatic(data);
 
-	//DPRINTF(Ras, "Writing data to overflow stack %s\n", addr);
-	port->sendTimingReq(pkt);
-	busy = true;
-	overflowPaddr += PCSTATE_SIZE*8;
-	return true;
+	if (port->sendTimingReq(pkt)) {
+	    DPRINTF(TMD, "TestMemDevice: Write sent\n");
+            overflowPaddr += PCSTATE_SIZE*8;
+	    return true;
+        }
+        busy = true;
+        lastRequest = pkt;
+        return false;
 } 
 
 bool
@@ -69,18 +80,23 @@ TestMemDevice::readReq() {
 	if (busy)
 		return false;
 	
-	overflowPaddr -= PCSTATE_SIZE*8;
 	Request::Flags flags;
-	flags.set(Request::UNCACHEABLE);
-  	Request *req = new Request(overflowPaddr, PCSTATE_SIZE, flags, 0);
+	flags.set(Request::PHYSICAL | Request::STRICT_ORDER);
+  	Request *req = new Request(overflowPaddr - PCSTATE_SIZE*8, PCSTATE_SIZE, flags, 0);
 
 	Packet *pkt = new Packet(req, MemCmd::ReadReq);
 	uint8_t *newData = new uint8_t[PCSTATE_SIZE];
 	pkt->dataDynamic(newData);
 
-	port->sendTimingReq(pkt);
-	busy = true;
-	return true;
+	if (port->sendTimingReq(pkt)) {
+            overflowPaddr -= PCSTATE_SIZE * 8;
+            DPRINTF(TMD, "TestMemDevice: Read sent\n");
+            return true;
+        }
+	
+        busy = true;
+	lastRequest = pkt;
+	return false;
 }
 
 void 

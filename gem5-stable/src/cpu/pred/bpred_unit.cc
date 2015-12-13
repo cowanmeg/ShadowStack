@@ -66,6 +66,7 @@ BPredUnit::BPredUnit(const Params *params)
 {
     for (auto& r : RAS)
         r.init(params->RASSize);
+    last_squashed_sn = 1;
 }
 
 void
@@ -198,18 +199,20 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
     // Now lookup in the BTB or RAS.
     if (pred_taken) {
         // if predicting a call save the caller address in the RAS
+        bool pushPc = false;
         if (inst->isCall()) {
                 //TheISA::PCState predictedTarget = TheISA::buildRetPC(pc, pc);
-                RAS[tid].push(pc);
+                //RAS[tid].push(pc);
+                pushPc = true;
                 predict_record.pushedRAS = true;
 
                 // Record that it was a call so that the top RAS entry can
                 // be popped off if the speculation is incorrect.
                 predict_record.wasCall = true;
 
-                DPRINTF(Ras, "[tid:%i]: Instruction %s was a "
+                DPRINTF(Ras, "[sn:%i]: Instruction %s was a "
                         "call, adding %s to the RAS index: %i.\n",
-                        tid, pc, target, RAS[tid].topIdx());
+                        seqNum, pc, target, RAS[tid].topIdx());
         }
 
         // Predicting branch targets
@@ -233,9 +236,9 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
             }
             predict_record.usedBTB = true; // RAS return is speculative
             
-            DPRINTF(Ras, "[tid:%i]: Instruction %s is a return, "
+            DPRINTF(Ras, "[sn:%i]: Instruction %s is a return, "
                     "RAS predicted target: %s, RAS index: %i.\n",
-                    tid, pc, target, predict_record.RASIndex);
+                    seqNum, pc, target, predict_record.RASIndex);
         } else if (inst->isDirectCtrl()) {
            target = inst->branchTarget(pc);
            DPRINTF(Branch, "[tid:%i]: Instruction %s is a direct jump/call"
@@ -265,14 +268,20 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
                       pred_taken = false;
                       //TheISA::advancePC(target, inst);
                 } else if (inst->isCall()) {
-                      RAS[tid].pop();
+                      //RAS[tid].pop();
+                      pushPc = false;
                       predict_record.pushedRAS = false;
                       //target = BTB.lookup(pc.instAddr(), tid);
-                      DPRINTF(Ras, "[sn: %i] Don't know the target of the call - pretending not taken\n", seqNum);
+                      DPRINTF(Ras, "[sn:%i] Don't know the target of the call - pretending not taken\n", seqNum);
                 }
                 TheISA::advancePC(target, inst);
            }
         }
+        if (pushPc) {
+            if (!RAS[tid].push(pc))
+                *stall = true;
+        }
+
     }
 
     pc = target;
@@ -318,8 +327,8 @@ BPredUnit::predictInOrder(const StaticInstPtr &inst, const InstSeqNum &seqNum,
         uncondBranch(instPC.instAddr(), bp_history);
 
         if (inst->isReturn() && RAS[tid].empty()) {
-            DPRINTF(Ras, "[tid:%i] RAS is empty, predicting "
-                    "false.\n", tid);
+            DPRINTF(Ras, "[sn:%i] RAS is empty, predicting "
+                    "false.\n", seqNum);
             pred_taken = false;
         }
     } else {
@@ -519,18 +528,20 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
         }
 
 
-        if (hist_it->wasReturn && hist_it->usedRAS) {
+        if (hist_it->wasReturn && hist_it->usedRAS && actually_taken) {
             ++RASIncorrect;
             // meghan: Incorrect RAS address Security attack?
             // some weird error where gem5 is setting corrTarget to 0x34=>0x38 or 0x50=>0x54
             if (corrTarget.pc() != 0x34 and corrTarget.pc() != 0x50 and corrTarget.pc() != 0x2c) {
-                DPRINTF(Ras, "RAS Incorrect! RAS Index %d predicted caller %s actual target %s\n",
-                 (*hist_it).RASIndex, (*hist_it).RASTarget.addr, corrTarget);
+                DPRINTF(Ras, "[sn:%i] RAS Incorrect! RAS Index %d predicted caller %s actual target %s\n",
+                 squashed_sn, (*hist_it).RASIndex, (*hist_it).RASTarget.addr, corrTarget);
                 RAS[tid].print();
                 if (!RAS[tid].unroll(corrTarget)) {
                     DPRINTF(Ras, "RAS actually incorrect!\n");
-                    printf("RAS incorrect! Predicted Caller %lx->%lx, Actual Target %lx->%lx\n", 
-                      (*hist_it).RASTarget.addr.pc(), (*hist_it).RASTarget.addr.npc(), corrTarget.pc(), corrTarget.npc());
+                    printf("Return Address modification detected!\n");
+                    //exit(1);
+                    //printf("RAS incorrect! Predicted Caller %lx->%lx, Actual Target %lx->%lx\n", 
+                     // (*hist_it).RASTarget.addr.pc(), (*hist_it).RASTarget.addr.npc(), corrTarget.pc(), corrTarget.npc());
                 }
             }
         }
@@ -588,6 +599,10 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
     } else {
         DPRINTF(Branch, "[tid:%i]: [sn:%i] pred_hist empty, can't "
                 "update.\n", tid, squashed_sn);
+    }
+
+    if (squashed_sn > last_squashed_sn) {
+        last_squashed_sn = squashed_sn;
     }
 }
 

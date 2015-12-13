@@ -30,6 +30,8 @@
 
 #include "cpu/pred/ras.hh"
 #include "debug/Ras.hh"
+#include "debug/TMD.hh"
+
 void
 ReturnAddrStack::init(unsigned _numEntries)
 {
@@ -38,6 +40,7 @@ ReturnAddrStack::init(unsigned _numEntries)
      addrStack.resize(numEntries);
      reset();
      stalled = false;
+     stalledWrite = false;
 }
 
 void
@@ -52,6 +55,7 @@ void
 ReturnAddrStack::reset()
 {
     stalled = false;
+    stalledWrite = false;
     usedEntries = 0;
     tos = 0;
     bos = 0;
@@ -59,7 +63,7 @@ ReturnAddrStack::reset()
         addrStack[i] = (RASEntry{0,0});
 }
 
-void
+bool
 ReturnAddrStack::push(const TheISA::PCState &return_addr)
 {
     checkOverflowStack();
@@ -76,7 +80,16 @@ ReturnAddrStack::push(const TheISA::PCState &return_addr)
           std::cout << "RAS overflowed :(\n";
         }
     }
+
     DPRINTF(Ras, "RAS pushed %s bos=%d, tos=%d, usedEntries=%d\n", return_addr, bos, tos, usedEntries);
+
+    if (usedEntries == numEntries -1) {
+      DPRINTF(Ras, "RAS about to overflow\n");
+      std::cout << "Stall overflow\n";
+      stalledWrite = true;
+      return false;
+    }
+    return true;
 }
 
 bool
@@ -86,13 +99,14 @@ ReturnAddrStack::pop(bool ignoreValue)
     TheISA::PCState popped_addr = addrStack[tos].addr;
     if (count > 1) {
         addrStack[tos].count--;
-    } else if (addrStack[tos].count == 1 && usedEntries > 0) {
+    } else if (addrStack[tos].count < 2 && usedEntries > 0) {
         --usedEntries;
         decrTos();
     } /*else if (ignoreValue && overflowEntries > 0) { // Cheating - when popping off from 
       // a bad prediction if it goes into the overflow just get rid of it.
       overflowEntries--;
       bos--;
+      dev->resetAddr(overflowEntries);
       DPRINTF(Ras, "Trying to pop but RAS empty - pop overflow bos=%d tos=%d entries=%d overflow=%d\n",
                 bos, tos, usedEntries, overflowEntries);
     } */else {
@@ -103,9 +117,9 @@ ReturnAddrStack::pop(bool ignoreValue)
 
     checkOverflowStack();
 
-    if (usedEntries == 1 && overflowEntries > 0) {
+    if (usedEntries <=  2 && overflowEntries > 0) {
       // premetively stall
-      std::cout << "Stall\n";
+      std::cout << "Stall underflow\n";
       
       stalled = true;
       DPRINTF(Ras, "Suspend the thread to wait for RAS to fill back up\n");
@@ -125,7 +139,6 @@ ReturnAddrStack::restore(unsigned top_entry_idx, unsigned bottom_entry_idx,
     addrStack[tos] = restored;
     
     DPRINTF(Ras, "RAS restored %s count=%d, bos=%d, tos=%d, usedEntries=%d\n", restored.addr,restored.count, bos, tos, usedEntries);
-    print();
 }
 
 void
@@ -139,16 +152,19 @@ ReturnAddrStack::print() {
 void
 ReturnAddrStack::checkOverflowStack() {
   
-  if ( (overflowEntries > 0) && (usedEntries <= (numEntries * 1/3)) ) {
-      DPRINTF(Ras, "RAS triggered underflow - restore entries\n");
+  if ( (overflowEntries > 0) && (usedEntries <= (numEntries * 1/4)) ) {
+      DPRINTF(TMD, "RAS triggered underflow - restore entries\n");
       dev->readReq();
   } else if (usedEntries >= (numEntries * 3/4)) {
       // Write the bottom entry to the overflow stack
-      RASEntry entry = addrStack[bos+1];
-      TheISA::PCState address=entry.addr;
-      uint64_t encryptedAddr=rc.encrypt64(address.pc());
+      unsigned bosIndex = bos+1;
+      if (bos+1 == numEntries)
+        bosIndex = 0;
+      RASEntry entry = addrStack[bosIndex];
+      //TheISA::PCState address=entry.addr;
+      //uint64_t encryptedAddr=rc.encrypt64(address.pc());
       //printf("checkOverflow: before encrypted = %lx after encrypted = %lx\n",address.pc(),encryptedAddr);
-      entry.addr.pc(encryptedAddr);
+      //entry.addr.pc(encryptedAddr);
       //std::cout << "size: " << sizeof(entry) << std::endl;
       uint8_t *data = new uint8_t[PCSTATE_SIZE];
       std::memcpy(data, &entry, PCSTATE_SIZE);
@@ -158,60 +174,41 @@ ReturnAddrStack::checkOverflowStack() {
       usedEntries--;
       overflowEntries++;
 
-      DPRINTF(Ras, "RAS wrote %s bos=%d, usedEntries=%d overflowEntries=%d\n", entry.addr, 
+      DPRINTF(TMD, "RAS wrote %s bos=%d, usedEntries=%d overflowEntries=%d\n", entry.addr, 
       bos, usedEntries, overflowEntries);
       print();
+
+      if (stalledWrite) {
+        stalledWrite = false;
+        tc->activate();
+        DPRINTF(Ras, "Wake up thread Overflow \n");
+        std::cout << "Waking up thread\n";
+      }
     } 
   }
 }
-/*=======
-void 
-ReturnAddrStack::checkOverflow() {
-    if (usedEntries > (numEntries * 3/4)) {
-      // Write the bottom entry to the overflow stack
-      RASEntry entry = addrStack[bos+1];
-      TheISA::PCState address=entry.addr;
-      uint64_t encryptedAddr=rc.encrypt64(address.pc());
-      //printf("checkOverflow: before encrypted = %lx after encrypted = %lx\n",address.pc(),encryptedAddr);
-      entry.addr.pc(encryptedAddr);
-      //std::cout << "size: " << sizeof(entry) << std::endl;
-      uint8_t *data = new uint8_t[PCSTATE_SIZE];
-      std::memcpy(data, &entry, PCSTATE_SIZE);
-      if (dev->writeReq(data)) {
-        // Update RAS sate
-        incrBos();
-        usedEntries--;
-        overflowEntries++;
-
-        DPRINTF(Ras, "RAS wrote %s bos=%d, usedEntries=%d overflowEntries=%d\n", entry.addr, 
-            bos, usedEntries, overflowEntries);
-      } 
-    }
->>>>>>> 87bad6da474eef37f34b41a39b92940113ed8bd6
-*/
-
 
 void
 ReturnAddrStack::restoreAddr(const RASEntry &return_addr) {
   if (overflowEntries > 0) {
     RASEntry return_address = (RASEntry) return_addr;
-    uint64_t decryptedAddr = rc.encrypt64(return_address.addr.pc());
+    //uint64_t decryptedAddr = rc.encrypt64(return_address.addr.pc());
   //  printf("restoreAddr: before decrypted = %lx after decrypted = %lx\n",address.pc(),decryptedAddr);   
-    return_address.addr.pc(decryptedAddr);
+    //return_address.addr.pc(decryptedAddr);
     addrStack[bos] = return_address;
     decrBos();
 
     usedEntries++;
     overflowEntries--;
 
-    if (stalled) {
+    if (stalled && (usedEntries >= 2 || overflowEntries == 0)) {
         // wake up thread
         std::cout << "Waking up thread\n";
         stalled = false;
         tc->activate();
-        DPRINTF(Ras, "Wake up thread!\n");
+        DPRINTF(Ras, "Wake up thread! Underflow \n");
     }
-    DPRINTF(Ras, "Ras returned %s to bos=%d usedEntries=%d overflowEntries=%d\n", return_addr.addr, 
+    DPRINTF(TMD, "Ras returned %s to bos=%d usedEntries=%d overflowEntries=%d\n", return_addr.addr, 
         bos, usedEntries, overflowEntries);
   } 
   checkOverflowStack();

@@ -308,6 +308,8 @@ class BPredUnit : public SimObject
     /** Stat for number of times the RAS is incorrect. */
     Stats::Scalar RASIncorrect;
 
+    InstSeqNum last_squashed_sn;
+
   protected:
     /** Number of bits to shift instructions by for predictor addresses. */
     const unsigned instShiftAmt;

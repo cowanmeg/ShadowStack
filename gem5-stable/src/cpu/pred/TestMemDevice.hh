@@ -22,9 +22,10 @@ protected:
 		virtual bool recvTimingResp(PacketPtr pkt) {
 			return owner->recvTimingResp(pkt);
 		}
-		virtual void recvTimingSnoopReq(PacketPtr pkt) { }
 
-		virtual void recvReqRetry() { }
+		virtual void recvReqRetry() {
+			owner->recvReqRetry();
+		}
 
 		TestMemDevice *owner;
     };
@@ -48,6 +49,7 @@ public:
 	bool isConnected();
  	bool writeReq(uint8_t *data);
 	bool readReq();	
+	void recvReqRetry();
 
 	void resetAddr(unsigned numEntries);
 
@@ -58,6 +60,7 @@ private:
 	Addr overflowPaddr;
 	bool busy;
 	ReturnAddrStack *RAS;
+	Packet *lastRequest;
 
 };
 

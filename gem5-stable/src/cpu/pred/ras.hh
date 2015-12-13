@@ -83,7 +83,7 @@ class ReturnAddrStack
     { return bos; }
 
     /** Pushes an address onto the RAS. */
-    void push(const TheISA::PCState &return_addr);
+    bool push(const TheISA::PCState &return_addr);
 
     /** Pops the top address from the RAS. */
     bool pop(bool ignoreValue=false);
@@ -153,6 +153,7 @@ class ReturnAddrStack
     unsigned bos;
     
     bool stalled;
+    bool stalledWrite;
     /** Pointer to device that handles overflow stack*/
     TestMemDevice *dev;
     RC4 rc;
