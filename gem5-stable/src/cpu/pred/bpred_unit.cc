@@ -199,6 +199,7 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
     // Now lookup in the BTB or RAS.
     if (pred_taken) {
         // if predicting a call save the caller address in the RAS
+        TheISA::PCState callTarget;
         bool pushPc = false;
         if (inst->isCall()) {
                 //TheISA::PCState predictedTarget = TheISA::buildRetPC(pc, pc);
@@ -209,10 +210,6 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
                 // Record that it was a call so that the top RAS entry can
                 // be popped off if the speculation is incorrect.
                 predict_record.wasCall = true;
-
-                DPRINTF(Ras, "[sn:%i]: Instruction %s was a "
-                        "call, adding %s to the RAS index: %i.\n",
-                        seqNum, pc, target, RAS[tid].topIdx());
         }
 
         // Predicting branch targets
@@ -243,6 +240,8 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
            target = inst->branchTarget(pc);
            DPRINTF(Branch, "[tid:%i]: Instruction %s is a direct jump/call"
                         " target is %s.\n", tid, pc, target);
+           if (inst->isCall())
+                    callTarget = target;
         } else { // Indirect control and not a return- use the BTB to guess
            ++BTBLookups;
 
@@ -253,6 +252,9 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
 
                 DPRINTF(Branch, "[tid:%i]: Instruction %s predicted"
                         " target is %s.\n", tid, pc, target);
+
+                if (inst->isCall())
+                    callTarget = target;
 
             } else {
                 DPRINTF(Branch, "[tid:%i]: BTB doesn't have a "
@@ -278,8 +280,14 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
            }
         }
         if (pushPc) {
-            if (!RAS[tid].push(pc))
+            // hack - save the callTarget in pc and the return in npc
+            TheISA::PCState rasPc = pc;
+            rasPc.pc(callTarget.pc());
+            if (!RAS[tid].push(rasPc))
                 *stall = true;
+            DPRINTF(Ras, "[sn:%i]: Instruction %s was a "
+                        "call, adding %s to the RAS index: %i.\n",
+                        seqNum, rasPc, target, RAS[tid].topIdx());
         }
 
     }
